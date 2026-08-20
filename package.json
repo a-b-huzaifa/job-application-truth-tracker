@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrate": "node migrate.js",
+    "seed": "node seed.js",
+    "test": "node --test tests/auth.test.js"
   },
   "keywords": [],
   "author": "",
