@@ -5,6 +5,8 @@ import authRoutes from './routes/auth.js';
 import resumeRoutes from './routes/resumes.js';
 import applicationRoutes from './routes/applications.js';
 import analyzeRoutes from './routes/analyze.js';
+import staleCheckRoutes from './routes/staleCheck.js';
+import { startStaleCheckJob } from './jobs/staleCheckJob.js';
 import { auth } from './middleware/auth.js';
 
 const app = express();
@@ -16,6 +18,7 @@ app.use('/auth', authRoutes);
 app.use('/resumes', resumeRoutes);
 app.use('/applications', applicationRoutes);
 app.use('/applications', analyzeRoutes);
+app.use('/applications', staleCheckRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -36,6 +39,7 @@ const isMainModule = process.argv[1] && fileURLToPath(import.meta.url) === proce
 if (isMainModule || (process.env.NODE_ENV !== 'test' && !process.env.npm_lifecycle_event?.includes('test'))) {
   app.listen(PORT, () => {
     console.log(`Job Application Truth Tracker server running on port ${PORT}`);
+    startStaleCheckJob();
   });
 }
 
