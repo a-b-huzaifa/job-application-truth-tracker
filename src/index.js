@@ -2,14 +2,18 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
 import authRoutes from './routes/auth.js';
+import resumeRoutes from './routes/resumes.js';
+import applicationRoutes from './routes/applications.js';
 import { auth } from './middleware/auth.js';
 
 const app = express();
 
 app.use(express.json());
 
-// Mount auth routes
+// Mount API routes
 app.use('/auth', authRoutes);
+app.use('/resumes', resumeRoutes);
+app.use('/applications', applicationRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
