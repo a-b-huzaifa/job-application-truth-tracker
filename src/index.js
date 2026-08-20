@@ -6,6 +6,7 @@ import resumeRoutes from './routes/resumes.js';
 import applicationRoutes from './routes/applications.js';
 import analyzeRoutes from './routes/analyze.js';
 import staleCheckRoutes from './routes/staleCheck.js';
+import reportRoutes from './routes/reports.js';
 import { startStaleCheckJob } from './jobs/staleCheckJob.js';
 import { auth } from './middleware/auth.js';
 
@@ -19,6 +20,7 @@ app.use('/resumes', resumeRoutes);
 app.use('/applications', applicationRoutes);
 app.use('/applications', analyzeRoutes);
 app.use('/applications', staleCheckRoutes);
+app.use('/reports', reportRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
