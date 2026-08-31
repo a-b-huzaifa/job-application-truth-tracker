@@ -38,6 +38,7 @@ function getPlatformBadge(platform) {
 export default function Dashboard() {
   const { isAuthenticated, user } = useAuth();
   const [applications, setApplications] = useState([]);
+  const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -48,10 +49,14 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
 
-    apiFetch('/applications')
-      .then((data) => {
+    Promise.all([
+      apiFetch('/applications'),
+      apiFetch('/resumes').catch(() => ({ resumes: [] })),
+    ])
+      .then(([appsData, resumesData]) => {
         if (isMounted) {
-          setApplications(data.applications || []);
+          setApplications(appsData.applications || []);
+          setResumes(resumesData.resumes || []);
         }
       })
       .catch((err) => {
@@ -123,6 +128,27 @@ export default function Dashboard() {
             <span className="brutalist-badge brutalist-badge-cyan">Active Pipeline</span>
           </div>
         </div>
+
+        {/* Resume Variants Memory Links */}
+        {resumes.length > 0 && (
+          <div style={{ marginTop: '20px', borderTop: '2px solid var(--border-color)', paddingTop: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px' }}>
+              Resume Memory Insights:
+            </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {resumes.map((r) => (
+                <Link
+                  key={r.id}
+                  to={`/resumes/${r.id}/insights`}
+                  className="brutalist-btn brutalist-btn-sm"
+                  style={{ background: '#fdfcee' }}
+                >
+                  ⚡ {r.name} Insights &rarr;
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Loading & Error States */}
