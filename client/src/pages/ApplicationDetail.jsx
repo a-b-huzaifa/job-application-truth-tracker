@@ -69,15 +69,10 @@ export default function ApplicationDetail() {
       const data = await apiFetch(`/applications/${id}`);
       setApplication(data.application);
 
-      // If cached analysis already exists on the application record
-      if (data.application && typeof data.application.fit_score === 'number') {
-        setAnalysisResult({
-          baseline: {
-            fit_score: data.application.fit_score,
-            mismatch_reasons: data.application.mismatch_reasons || [],
-            cached: true,
-          },
-        });
+      // Fetch cached analysis history
+      const historyData = await apiFetch(`/applications/${id}/analysis-history`);
+      if (historyData.analysis) {
+        setAnalysisResult(historyData.analysis);
       }
     } catch (err) {
       setError(err.message || 'Failed to load application details');
@@ -102,6 +97,42 @@ export default function ApplicationDetail() {
       setError(err.message || 'Failed to run Agentic v2 fit analysis');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const [tailoring, setTailoring] = useState(false);
+
+  const handleTailorAndDownload = async () => {
+    if (!application?.resume_id) return;
+    setTailoring(true);
+    try {
+      const data = await apiFetch(`/resumes/${application.resume_id}/tailor`, {
+        method: 'POST',
+        body: JSON.stringify({
+          job_description: application.job_description,
+          role_title: application.role_title,
+          company_name: application.company_name,
+        }),
+      });
+      
+      const tailoredContent = data.resume?.content || '';
+      if (!tailoredContent) throw new Error('No content received from server');
+
+      const blob = new Blob([tailoredContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Tailored_Resume_${application.company_name.replace(/\s+/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert('Resume tailored and downloaded successfully!');
+    } catch (err) {
+      alert(`Error tailoring resume: ${err.message}`);
+    } finally {
+      setTailoring(false);
     }
   };
 
@@ -190,12 +221,22 @@ export default function ApplicationDetail() {
               {application?.resume_name || 'Resume'}
             </div>
             {application?.resume_id && (
-              <Link
-                to={`/resumes/${application.resume_id}/insights`}
-                style={{ fontSize: '12px', color: 'var(--accent-red)', fontWeight: 800, display: 'inline-block', marginTop: '6px' }}
-              >
-                View Historical Memory Insights &rarr;
-              </Link>
+              <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Link
+                  to={`/resumes/${application.resume_id}/insights`}
+                  style={{ fontSize: '12px', color: 'var(--accent-red)', fontWeight: 800, display: 'inline-block' }}
+                >
+                  View Historical Memory Insights &rarr;
+                </Link>
+                <button
+                  onClick={handleTailorAndDownload}
+                  disabled={tailoring}
+                  className="brutalist-btn"
+                  style={{ fontSize: '11px', padding: '6px 12px', background: 'var(--accent-cyan)', alignSelf: 'flex-start' }}
+                >
+                  {tailoring ? 'TAILORING...' : '✨ TAILOR & DOWNLOAD'}
+                </button>
+              </div>
             )}
           </div>
 

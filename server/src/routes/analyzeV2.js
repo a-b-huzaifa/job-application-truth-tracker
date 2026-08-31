@@ -87,6 +87,24 @@ router.post('/:id/analyze-v2', async (req, res) => {
     // 6. Fetch historical pattern warnings for this resume variant
     const memoryData = await getResumePatternWarnings(resume.id);
 
+    const fullAgenticData = {
+      baseline_score: agenticResult.baseline_score,
+      verified_score: agenticResult.verified_score,
+      mismatch_reasons: agenticResult.mismatch_reasons,
+      verifications: agenticResult.verifications,
+      strategist_actions: persistedActions.length > 0 ? persistedActions : agenticResult.strategist_actions,
+      overall_strategy: agenticResult.overall_strategy,
+      pattern_warnings: memoryData.pattern_warnings,
+      trajectory: agenticResult.trajectory,
+    };
+
+    // 7. Persist agentic result to llm_analyses table for history
+    const { default: analysisRepository } = await import('../repositories/analysisRepository.js');
+    const existingAnalysis = await analysisRepository.getAnalysisByApplicationId(application.id);
+    if (existingAnalysis) {
+      await analysisRepository.updateAgenticAnalysis(existingAnalysis.id, fullAgenticData);
+    }
+
     return res.status(200).json({
       message: 'Analysis v2 generated successfully',
       application_id: application.id,
@@ -97,16 +115,7 @@ router.post('/:id/analyze-v2', async (req, res) => {
         mismatch_reasons: baselineAnalysis.mismatch_reasons,
         cached: baselineAnalysis.cached,
       },
-      agentic_v2: {
-        baseline_score: agenticResult.baseline_score,
-        verified_score: agenticResult.verified_score,
-        mismatch_reasons: agenticResult.mismatch_reasons,
-        verifications: agenticResult.verifications,
-        strategist_actions: persistedActions.length > 0 ? persistedActions : agenticResult.strategist_actions,
-        overall_strategy: agenticResult.overall_strategy,
-        pattern_warnings: memoryData.pattern_warnings,
-        trajectory: agenticResult.trajectory,
-      },
+      agentic_v2: fullAgenticData,
     });
   } catch (error) {
     console.error('Analyze v2 application error:', error);

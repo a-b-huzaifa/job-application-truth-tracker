@@ -140,6 +140,39 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET /applications/:id/analysis-history — Get saved LLM analysis history
+router.get('/:id/analysis-history', async (req, res) => {
+  try {
+    const application = await applicationRepository.getApplicationById(req.params.id, req.userId);
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const { default: analysisRepository } = await import('../repositories/analysisRepository.js');
+    const analysis = await analysisRepository.getAnalysisByApplicationId(application.id);
+
+    if (!analysis) {
+      return res.status(200).json({ analysis: null });
+    }
+
+    return res.status(200).json({
+      analysis: {
+        baseline: {
+          fit_score: analysis.fit_score,
+          mismatch_reasons: analysis.mismatch_reasons,
+          cached: true,
+        },
+        agentic_v2: analysis.agentic_analysis || null,
+      }
+    });
+  } catch (error) {
+    console.error('Get analysis history error:', error);
+    return res.status(500).json({
+      error: 'Internal server error fetching analysis history',
+    });
+  }
+});
+
 // PATCH /applications/:id — Update application details or status
 router.patch('/:id', async (req, res) => {
   try {

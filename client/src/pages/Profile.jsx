@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
+import apiClient, { apiFetch } from '../api/client';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -37,8 +37,8 @@ export default function Profile() {
     formData.append('name', file.name.replace(/\.[^/.]+$/, "")); // strip extension
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/resumes/upload', {
+      const token = apiClient.getAuthToken();
+      const response = await fetch(`${apiClient.API_BASE_URL}/resumes/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -47,7 +47,7 @@ export default function Profile() {
       });
 
       if (!response.ok) {
-        const errData = await response.json();
+        const errData = await response.json().catch(() => ({ error: 'Failed to upload resume' }));
         throw new Error(errData.error || 'Failed to upload resume');
       }
 
@@ -104,7 +104,7 @@ export default function Profile() {
           />
           <button 
             className="brutalist-btn" 
-            style={{ background: 'var(--accent-blue)', color: '#fff' }}
+            style={{ background: '#000', color: '#fff' }}
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
           >
@@ -127,9 +127,8 @@ export default function Profile() {
                   background: '#f1f1f1', 
                   padding: '12px', 
                   fontSize: '11px', 
-                  maxHeight: '100px', 
-                  overflow: 'hidden', 
-                  textOverflow: 'ellipsis',
+                  maxHeight: '400px', 
+                  overflowY: 'auto', 
                   whiteSpace: 'pre-wrap'
                 }}>
                   {resume.content}

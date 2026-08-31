@@ -2,7 +2,7 @@ import { query } from '../db.js';
 
 export async function getAnalysisByHash(jobDescriptionHash) {
   const result = await query(
-    `SELECT id, application_id, fit_score, mismatch_reasons, job_description_hash, created_at
+    `SELECT id, application_id, fit_score, mismatch_reasons, agentic_analysis, job_description_hash, created_at
      FROM llm_analyses
      WHERE job_description_hash = $1`,
     [jobDescriptionHash]
@@ -12,7 +12,7 @@ export async function getAnalysisByHash(jobDescriptionHash) {
 
 export async function getAnalysisByApplicationId(applicationId) {
   const result = await query(
-    `SELECT id, application_id, fit_score, mismatch_reasons, job_description_hash, created_at
+    `SELECT id, application_id, fit_score, mismatch_reasons, agentic_analysis, job_description_hash, created_at
      FROM llm_analyses
      WHERE application_id = $1
      ORDER BY created_at DESC
@@ -30,7 +30,7 @@ export async function createAnalysis(applicationId, fitScore, mismatchReasons, j
     ON CONFLICT (job_description_hash) DO UPDATE
     SET fit_score = EXCLUDED.fit_score,
         mismatch_reasons = EXCLUDED.mismatch_reasons
-    RETURNING id, application_id, fit_score, mismatch_reasons, job_description_hash, created_at`,
+    RETURNING id, application_id, fit_score, mismatch_reasons, agentic_analysis, job_description_hash, created_at`,
     [
       applicationId,
       fitScore,
@@ -41,8 +41,20 @@ export async function createAnalysis(applicationId, fitScore, mismatchReasons, j
   return result.rows[0];
 }
 
+export async function updateAgenticAnalysis(id, agenticAnalysis) {
+  const result = await query(
+    `UPDATE llm_analyses
+     SET agentic_analysis = $1
+     WHERE id = $2
+     RETURNING id`,
+    [JSON.stringify(agenticAnalysis), id]
+  );
+  return result.rowCount > 0;
+}
+
 export default {
   getAnalysisByHash,
   getAnalysisByApplicationId,
   createAnalysis,
+  updateAgenticAnalysis,
 };
