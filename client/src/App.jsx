@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import ApplicationDetailPage from './pages/ApplicationDetailPage';
+import ApplicationDetail from './pages/ApplicationDetail';
 import ResumeInsightsPage from './pages/ResumeInsightsPage';
 
 export default function App() {
@@ -15,7 +15,7 @@ export default function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="login" element={<Login />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="applications/:id" element={<ApplicationDetailPage />} />
+          <Route path="applications/:id" element={<ApplicationDetail />} />
           <Route path="resumes/:id/insights" element={<ResumeInsightsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
