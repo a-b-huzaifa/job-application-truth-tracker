@@ -248,6 +248,264 @@ SKILLS:
       console.log(`Inserted cached LLM analysis for ${app.company_name} (Fit Score: ${analysis.fit_score}%)`);
     }
 
+    // 6. Additional Resumes for Hackathon Benchmark Suite (Additively Added)
+    const evalResumesData = [
+      {
+        name: 'Junior Developer (Overclaiming Claims Variant)',
+        content: `SUMMARY:
+Principal Enterprise Architect & Global AI Director with 2 years of industry tenure. Spearheaded worldwide cloud transformation, designed quantum-ready cryptographic consensus algorithms, and directed engineering divisions across 5 continents.
+
+EXPERIENCE:
+Junior Web Assistant | WebStudio (2024 - Present)
+- Maintained WordPress templates, styled HTML/CSS landing pages, and wrote vanilla JavaScript form validators.
+
+SKILLS:
+- Languages: JavaScript, HTML5, CSS3, Python (basic syntax)
+- Claims: Distributed consensus architectures, Petabyte ML pipelines, Global organizational leadership, Quantum crypto`,
+      },
+      /**
+       * =========================================================================================
+       * EXPLICIT HARD CASE EXPLANATION:
+       * -----------------------------------------------------------------------------------------
+       * Why this is the official "Hard Case":
+       * 1. This candidate's experience is 100% FACTUALLY ACCURATE and grounded in real-world systems
+       *    engineering (Go, Linux kernel TCP tuning, eBPF, Kafka partition mechanics).
+       * 2. However, the phrasing uses dense, extreme impact metrics:
+       *    "1.2M requests/sec across 4-person pod", "p99 180ms to 4ms via Linux kernel TCP buffer pools",
+       *    "100x traffic spike with 0.00% downtime".
+       * 3. A naive single-shot LLM or baseline matcher will superficially flag these claims as
+       *    "overclaiming", "unrealistic exaggeration", or "phrasing risk" because of the sheer magnitude
+       *    of the performance statistics.
+       * 4. The Agentic Verifier must correctly inspect the deep evidence, cross-reference the concrete
+       *    stack (eBPF, Go, Kafka, TCP buffer tuning), and confirm that the metrics are substantiated,
+       *    successfully AVOIDING a false-positive penalty.
+       * =========================================================================================
+       */
+      {
+        name: 'High-Velocity Distributed Systems Specialist (Dense Impact Framing - The Hard Case)',
+        content: `SUMMARY:
+Staff Systems & Distributed Infrastructure Engineer with 6 years of deep systems programming experience. Specializes in microsecond-latency network services, high-throughput message buses, and Linux kernel performance optimization.
+
+CORE PRODUCTION ACHIEVEMENTS:
+- Spearheaded the design and production deployment of a multi-region event streaming gateway serving 1.2M requests/second sustained across a lean 4-person infrastructure pod.
+- Cut tail latency (p99) from 180ms to 4ms by rewriting core memory-mapped cache layer in Go and optimizing Linux kernel TCP buffer pools.
+- Scaled real-time order matching engine across Black Friday 100x traffic spike with 0.00% downtime and zero message loss via Kafka cluster partition tuning.
+- Implemented kernel-level eBPF packet filter preventing DDoS amplification attacks on production edge proxies.
+
+SKILLS:
+- Languages: Go (Golang), C++, Rust, SQL, Python
+- Systems & Network: Linux eBPF, TCP/IP socket tuning, Epoll, gRPC, Memory-Mapped I/O
+- Distributed Infrastructure: Apache Kafka (deep tuning), Redis, PostgreSQL, Docker, Kubernetes, AWS`,
+      },
+    ];
+
+    const evalResumeRows = [];
+    for (const r of evalResumesData) {
+      const res = await pool.query(
+        `INSERT INTO resumes (user_id, name, content)
+         VALUES ($1, $2, $3)
+         RETURNING id, name`,
+        [user.id, r.name, r.content]
+      );
+      evalResumeRows.push(res.rows[0]);
+      console.log(`Created eval resume: ${r.name} (ID: ${res.rows[0].id})`);
+    }
+
+    const [overclaimingResume, hardCaseResume] = evalResumeRows;
+
+    // 7. Seed 18 Benchmark Evaluation Application Cases
+    const evalApplicationsData = [
+      // --- 10 Straightforward Matches / Mismatches ---
+      {
+        resume_id: fullstackResume.id,
+        company_name: 'Shopify (Eval Case 1)',
+        role_title: 'Senior Full Stack Developer - Commerce Platform',
+        job_description: 'Looking for a Full Stack Engineer with 4+ years experience in React, TypeScript, Node.js, Express, and PostgreSQL to scale storefront checkout.',
+        platform: 'direct',
+        applied_at: daysAgo(5),
+        status: 'applied',
+      },
+      {
+        resume_id: backendResume.id,
+        company_name: 'Confluent (Eval Case 2)',
+        role_title: 'Backend Event Streaming Engineer',
+        job_description: 'We need a backend specialist with Go, Kafka, Redis, and distributed systems architecture experience to build high-throughput data pipelines.',
+        platform: 'wellfound',
+        applied_at: daysAgo(6),
+        status: 'applied',
+      },
+      {
+        resume_id: devopsResume.id,
+        company_name: 'AWS / Amazon (Eval Case 3)',
+        role_title: 'Site Reliability & Kubernetes Specialist',
+        job_description: 'Seeking a DevOps Engineer with deep Terraform, Kubernetes cluster orchestration, AWS infrastructure, and Prometheus observability expertise.',
+        platform: 'linkedin',
+        applied_at: daysAgo(7),
+        status: 'applied',
+      },
+      {
+        resume_id: fullstackResume.id,
+        company_name: 'Vercel Frontend (Eval Case 4)',
+        role_title: 'Junior React Frontend Developer',
+        job_description: 'Join our team building UI components in React, TypeScript, HTML5, and Tailwind CSS. REST API integration experience required.',
+        platform: 'direct',
+        applied_at: daysAgo(8),
+        status: 'applied',
+      },
+      {
+        resume_id: backendResume.id,
+        company_name: 'OpenAI ML (Eval Case 5)',
+        role_title: 'Research Scientist - PyTorch & CUDA Models',
+        job_description: 'Requires PhD or 5+ years deep research in PyTorch, CUDA kernel programming, transformer architectures, and training LLMs at scale.',
+        platform: 'linkedin',
+        applied_at: daysAgo(9),
+        status: 'applied',
+      },
+      {
+        resume_id: devopsResume.id,
+        company_name: 'Apple Embedded (Eval Case 6)',
+        role_title: 'Firmware & Embedded Hardware Engineer',
+        job_description: 'Low-level RTOS, ARM microcontroller assembly, oscilloscope debugging, and C firmware development for consumer hardware devices.',
+        platform: 'direct',
+        applied_at: daysAgo(10),
+        status: 'applied',
+      },
+      {
+        resume_id: fullstackResume.id,
+        company_name: 'Airbnb Mobile (Eval Case 7)',
+        role_title: 'Staff iOS & Swift Application Architect',
+        job_description: 'Lead our native iOS team with 7+ years Swift, UIKit, CoreData, Xcode Instruments, and App Store release lifecycle experience.',
+        platform: 'linkedin',
+        applied_at: daysAgo(11),
+        status: 'applied',
+      },
+      {
+        resume_id: backendResume.id,
+        company_name: 'Cockroach Labs (Eval Case 8)',
+        role_title: 'Distributed Database Engine Engineer',
+        job_description: 'Work on distributed consensus (Raft), transactional MVCC storage engines, SQL query planning, and Go distributed systems.',
+        platform: 'wellfound',
+        applied_at: daysAgo(12),
+        status: 'applied',
+      },
+      {
+        resume_id: devopsResume.id,
+        company_name: 'CrowdStrike (Eval Case 9)',
+        role_title: 'Cloud Security & Infrastructure Compliance Engineer',
+        job_description: 'Manage AWS/GCP security controls, IAM policies, Secrets Vault, SOC2 compliance automation, and Terraform IaC pipelines.',
+        platform: 'direct',
+        applied_at: daysAgo(13),
+        status: 'applied',
+      },
+      {
+        resume_id: fullstackResume.id,
+        company_name: 'Snowflake Core (Eval Case 10)',
+        role_title: 'Low-Level Rust Engine Developer',
+        job_description: 'Requires 6+ years systems programming in Rust and C++ for SIMD vector execution engines and columnar file format parsers.',
+        platform: 'linkedin',
+        applied_at: daysAgo(14),
+        status: 'applied',
+      },
+
+      // --- 4 Deliberate Overclaiming Cases ---
+      {
+        resume_id: overclaimingResume.id,
+        company_name: 'Google Cloud (Eval Case 11 - Overclaim)',
+        role_title: 'Principal Cloud Systems Architect',
+        job_description: 'Looking for a Principal Architect to lead enterprise migration strategies for Fortune 500 companies across multi-cloud setups.',
+        platform: 'direct',
+        applied_at: daysAgo(15),
+        status: 'applied',
+      },
+      {
+        resume_id: overclaimingResume.id,
+        company_name: 'DeepMind (Eval Case 12 - Overclaim)',
+        role_title: 'Staff Quantum Computing & AI Research Lead',
+        job_description: 'Lead quantum error correction and distributed quantum-classical hybrid algorithms for frontier intelligence exploration.',
+        platform: 'wellfound',
+        applied_at: daysAgo(16),
+        status: 'applied',
+      },
+      {
+        resume_id: overclaimingResume.id,
+        company_name: 'Palantir Defense (Eval Case 13 - Overclaim)',
+        role_title: 'Director of Global Cyber Warfare & Exploitation',
+        job_description: 'Direct offensive cyber security teams, zero-day discovery programs, and national infrastructure defense architectures.',
+        platform: 'linkedin',
+        applied_at: daysAgo(17),
+        status: 'applied',
+      },
+      {
+        resume_id: overclaimingResume.id,
+        company_name: 'Citadel Securities (Eval Case 14 - Overclaim)',
+        role_title: 'Managing Director of High-Frequency Trading Desk',
+        job_description: 'Direct trading strategies processing tens of billions in daily volume with sub-microsecond algorithmic execution.',
+        platform: 'direct',
+        applied_at: daysAgo(18),
+        status: 'applied',
+      },
+
+      // --- 3 Sparse / Vague Job Descriptions ---
+      {
+        resume_id: fullstackResume.id,
+        company_name: 'Stealth Startup Alpha (Eval Case 15 - Sparse JD)',
+        role_title: 'Rockstar Software Ninja',
+        job_description: 'We are looking for a rockstar coder who wants to build awesome web products fast. Must have good vibes and work hard.',
+        platform: 'wellfound',
+        applied_at: daysAgo(19),
+        status: 'applied',
+      },
+      {
+        resume_id: backendResume.id,
+        company_name: 'Stealth AI Beta (Eval Case 16 - Sparse JD)',
+        role_title: 'Backend Engineer',
+        job_description: 'Backend engineer needed for high-growth stealth AI startup. Modern tech stack. Competitive salary and equity.',
+        platform: 'direct',
+        applied_at: daysAgo(20),
+        status: 'applied',
+      },
+      {
+        resume_id: devopsResume.id,
+        company_name: 'Stealth Cloud Gamma (Eval Case 17 - Sparse JD)',
+        role_title: 'Cloud Infrastructure Wizard',
+        job_description: 'Looking for a cloud wizard to handle our servers and infrastructure. Join our fast paced dynamic team.',
+        platform: 'linkedin',
+        applied_at: daysAgo(21),
+        status: 'applied',
+      },
+
+      // --- 1 Explicitly Hard Case ---
+      {
+        resume_id: hardCaseResume.id,
+        company_name: 'Cloudflare / Edge (Eval Case 18 - The Hard Case)',
+        role_title: 'Principal Edge Infrastructure & Performance Engineer',
+        job_description: 'Seeking a senior systems engineer to scale multi-region edge proxies handling >1M requests/sec in Go/C++, Linux kernel network socket tuning, eBPF DDoS mitigation, and high-throughput Kafka ingestion with sub-10ms p99 latency.',
+        platform: 'direct',
+        applied_at: daysAgo(22),
+        status: 'applied',
+      },
+    ];
+
+    for (const app of evalApplicationsData) {
+      await pool.query(
+        `INSERT INTO applications (
+          user_id, resume_id, company_name, role_title, job_description,
+          platform, applied_at, status, last_status_check
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+        [
+          user.id,
+          app.resume_id,
+          app.company_name,
+          app.role_title,
+          app.job_description,
+          app.platform,
+          app.applied_at,
+          app.status,
+        ]
+      );
+    }
+    console.log(`Inserted ${evalApplicationsData.length} evaluation benchmark applications.`);
+
     console.log('--- Database Seeding Completed Successfully ---');
   } catch (error) {
     console.error('Seeding failed:', error);
