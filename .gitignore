@@ -3,6 +3,8 @@ node_modules/
 server/.env
 server/node_modules/
 server/outputs/*.pdf
+client/node_modules/
+client/build/
 outputs/*.pdf
 
 NOTES.md
