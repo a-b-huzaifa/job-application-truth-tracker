@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import 'dotenv/config';
+import { callLLM } from '../llmProvider.js';
 
 export const matchSchema = z.object({
   fit_score: z.number().int().min(0).max(100),
@@ -30,14 +30,6 @@ async function callGeminiMatcher(extractedProfile, jobDescription, isRetry = fal
   if (customAiClient) {
     return await customAiClient.generateContent({ extractedProfile, jobDescription, isRetry });
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured in environment variables');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const profileSummary = JSON.stringify(extractedProfile, null, 2);
 
@@ -72,8 +64,7 @@ Return your response strictly as a JSON object with this exact structure:
   "mismatch_reasons": ["specific gap or missing skill 1", "specific gap 2"]
 }`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return await callLLM(prompt);
 }
 
 function fallbackMatch(extractedProfile, jobDescription) {

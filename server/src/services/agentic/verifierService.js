@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import 'dotenv/config';
+import { callLLM } from '../llmProvider.js';
 
 export const verificationItemSchema = z.object({
   claim: z.string(),
@@ -43,14 +43,6 @@ async function callGeminiVerifier(resumeContent, jobDescription, fitScore, misma
       isRetry,
     });
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured in environment variables');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const claimsList = JSON.stringify(mismatchReasons, null, 2);
 
@@ -119,8 +111,7 @@ Return your response strictly as a JSON object matching this structure:
   ]
 }`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return await callLLM(prompt);
 }
 
 import verifierFlagRepository from '../../repositories/verifierFlagRepository.js';

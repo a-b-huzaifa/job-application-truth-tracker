@@ -282,6 +282,10 @@ This repository has been upgraded on branch `hackathon-agentic-v2` with an auton
 - 🛠️ **[REPRODUCE.md](hackathon/REPRODUCE.md)**: Complete reproduction guide with exact commands, environment configurations, and expected runtimes for both backend and frontend.
 
 ### Safety & Human-in-the-Loop Guarantees
-> [!IMPORTANT]
 > **Zero Autonomous Mutation Invariant:** No AI action, resume modification, or strategy decision is **ever** auto-executed without explicit human approval. Proposed resume rewrites and application strategy plans are persisted as advisory records requiring candidate sign-off via the Human Approval Gate (`POST /applications/:id/strategist-actions/:actionId/approve`), guaranteeing that no candidate resume content is ever mutated by automated background workflows.
+
+### v2.0 Latest Additions
+- **Provider-Agnostic LLM Layer:** Support for Gemini, OpenAI, and OpenRouter through a dynamic `.env` configuration.
+- **Dynamic Resume Tailoring:** Generates DOCX files instantly targeting specific Job Description gaps based on Strategist advice.
+- **Historical Memory Insights:** Global dashboard surfacing recurring JATT flags across your past applications.
 

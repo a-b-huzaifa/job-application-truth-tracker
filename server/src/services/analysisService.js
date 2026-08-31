@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import 'dotenv/config';
 import { hashText } from './hashService.js';
 import analysisRepository from '../repositories/analysisRepository.js';
+import { callLLM } from './llmProvider.js';
 
 const analysisSchema = z.object({
   fit_score: z.number().int().min(0).max(100),
@@ -33,20 +33,12 @@ export function resetCustomAiClient() {
 }
 
 /**
- * Invokes Gemini AI to evaluate fit between a resume and job description.
+ * Invokes AI to evaluate fit between a resume and job description.
  */
 async function callGeminiModel(resumeContent, jobDescription, isRetry = false) {
   if (customAiClient) {
     return await customAiClient.generateContent({ resumeContent, jobDescription, isRetry });
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured in environment variables');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const prompt = isRetry
     ? `CRITICAL: You MUST return ONLY a valid, raw JSON object (NO markdown, NO extra text).
@@ -78,8 +70,7 @@ Return your response strictly as a JSON object with this exact structure:
   "mismatch_reasons": ["specific gap or missing skill 1", "specific gap 2"]
 }`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return await callLLM(prompt);
 }
 
 /**

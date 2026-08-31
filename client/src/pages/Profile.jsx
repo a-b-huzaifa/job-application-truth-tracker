@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient, { apiFetch } from '../api/client';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -62,6 +64,29 @@ export default function Profile() {
     }
   };
 
+  const handleDownload = async (resume) => {
+    try {
+      const paragraphs = resume.content.split('\n').map(text => 
+        new Paragraph({
+          children: [new TextRun({ text, font: "Arial", size: 24 })], // size is in half-points (24 = 12pt)
+          spacing: { after: 120 }
+        })
+      );
+
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: paragraphs,
+        }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${resume.name.replace(/\s+/g, '_')}.docx`);
+    } catch (err) {
+      alert(`Error creating DOCX: ${err.message}`);
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: '20px', fontFamily: 'var(--font-mono)' }}>Loading profile...</div>;
   }
@@ -119,9 +144,20 @@ export default function Profile() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {resumes.map(resume => (
               <div key={resume.id} style={{ border: '2px solid #000', padding: '16px' }}>
-                <div style={{ fontWeight: 800, marginBottom: '8px' }}>{resume.name}</div>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                  Created: {new Date(resume.created_at).toLocaleDateString()}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, marginBottom: '4px' }}>{resume.name}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      Created: {new Date(resume.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => handleDownload(resume)}
+                    className="brutalist-btn"
+                    style={{ fontSize: '11px', padding: '4px 10px', background: 'var(--accent-cyan)' }}
+                  >
+                    ⬇ DOWNLOAD
+                  </button>
                 </div>
                 <div style={{ 
                   background: '#f1f1f1', 

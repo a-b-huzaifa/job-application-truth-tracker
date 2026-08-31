@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import 'dotenv/config';
+import { callLLM } from '../llmProvider.js';
 
 export const strategistActionSchema = z.object({
   claim: z.string(),
@@ -60,14 +60,6 @@ async function callGeminiStrategist({ resumeContent, jobDescription, verifiedSco
       isRetry,
     });
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured in environment variables');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const verificationsJson = JSON.stringify(verifications, null, 2);
 
@@ -132,8 +124,7 @@ Return strictly as JSON matching this schema:
   ]
 }`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return await callLLM(prompt);
 }
 
 /**

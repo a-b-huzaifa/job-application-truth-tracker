@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import 'dotenv/config';
+import { callLLM } from '../llmProvider.js';
 
 export const extractionSchema = z.object({
   skills: z.array(z.string()).default([]),
@@ -32,14 +32,6 @@ async function callGeminiExtractor(resumeContent, isRetry = false) {
     return await customAiClient.generateContent({ resumeContent, isRetry });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured in environment variables');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
-
   const prompt = isRetry
     ? `CRITICAL: You MUST return ONLY a valid, raw JSON object (NO markdown, NO extra text).
 Extract candidate skills, years of experience, and software tools from this resume.
@@ -66,8 +58,7 @@ Return your response strictly as a JSON object with this exact structure:
   "tools": ["React", "PostgreSQL", "Docker", "AWS"]
 }`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return await callLLM(prompt);
 }
 
 function fallbackExtract(resumeContent) {

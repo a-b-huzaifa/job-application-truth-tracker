@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 
 function getFlagBadge(flagType) {
   switch (flagType) {
@@ -118,15 +120,19 @@ export default function ApplicationDetail() {
       const tailoredContent = data.resume?.content || '';
       if (!tailoredContent) throw new Error('No content received from server');
 
-      const blob = new Blob([tailoredContent], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Tailored_Resume_${application.company_name.replace(/\s+/g, '_')}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const paragraphs = tailoredContent.split('\n').map(text => 
+        new Paragraph({
+          children: [new TextRun({ text, font: "Arial", size: 24 })],
+          spacing: { after: 120 }
+        })
+      );
+
+      const doc = new Document({
+        sections: [{ properties: {}, children: paragraphs }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `Tailored_Resume_${application.company_name.replace(/\s+/g, '_')}.docx`);
       
       alert('Resume tailored and downloaded successfully!');
     } catch (err) {
