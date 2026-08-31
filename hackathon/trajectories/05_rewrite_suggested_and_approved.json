@@ -1,0 +1,144 @@
+{
+  "trajectory_case": "05_rewrite_suggested_and_approved",
+  "timestamp": "2026-08-31T13:15:03.158Z",
+  "summary": {
+    "baseline_score": 72,
+    "verified_score": 82,
+    "overall_recommendation": "REVISE_RESUME_FIRST",
+    "strategist_action": "REWRITE_SUGGESTED",
+    "lifecycle_state": "APPROVED_AND_APPLIED"
+  },
+  "agentic_pipeline_result": {
+    "baseline_score": 72,
+    "verified_score": 82,
+    "mismatch_reasons": [
+      "Candidate is junior with only 4 years experience vs 5+ years senior target"
+    ],
+    "verifications": [
+      {
+        "claim": "Candidate is junior with only 4 years experience vs 5+ years senior target",
+        "supported": true,
+        "evidence": "Candidate has 4 dense years of core production engineering; calling them \"junior\" is an aggressive phrasing risk.",
+        "flag_type": "phrasing_risk"
+      }
+    ],
+    "strategist_actions": [
+      {
+        "claim": "Candidate is junior with only 4 years experience vs 5+ years senior target",
+        "action": "REWRITE_SUGGESTED",
+        "reasoning": "Reframe 4 years of experience to emphasize rapid scalable microservice delivery.",
+        "suggested_rewrite": "Engineered scalable backend microservices and high-throughput PostgreSQL databases serving 1M+ daily transactions across 4 intensive years of core production engineering.",
+        "requires_human_approval": true
+      }
+    ],
+    "overall_strategy": {
+      "recommendation": "REVISE_RESUME_FIRST",
+      "rationale": "Reframe experience bullet points to highlight high velocity delivery."
+    },
+    "trajectory": [
+      {
+        "step": "extractor",
+        "input": {
+          "resume_length": 473
+        },
+        "output": {
+          "skills": [
+            "TypeScript",
+            "Node.js",
+            "Express",
+            "PostgreSQL",
+            "Redis"
+          ],
+          "years_experience": 4,
+          "tools": [
+            "Docker",
+            "Git"
+          ]
+        },
+        "duration_ms": 0
+      },
+      {
+        "step": "matcher",
+        "input": {
+          "profile_summary": {
+            "skills_count": 5,
+            "years_experience": 4
+          },
+          "jd_length": 119
+        },
+        "output": {
+          "fit_score": 72,
+          "mismatch_reasons": [
+            "Candidate is junior with only 4 years experience vs 5+ years senior target"
+          ]
+        },
+        "duration_ms": 0
+      },
+      {
+        "step": "verifier",
+        "input": {
+          "initial_fit_score": 72,
+          "claims_count": 1
+        },
+        "output": {
+          "verified_score": 82,
+          "verifications": [
+            {
+              "claim": "Candidate is junior with only 4 years experience vs 5+ years senior target",
+              "supported": true,
+              "evidence": "Candidate has 4 dense years of core production engineering; calling them \"junior\" is an aggressive phrasing risk.",
+              "flag_type": "phrasing_risk"
+            }
+          ]
+        },
+        "duration_ms": 2
+      },
+      {
+        "step": "strategist",
+        "input": {
+          "verified_score": 82,
+          "verifications_count": 1
+        },
+        "output": {
+          "overall_recommendation": "REVISE_RESUME_FIRST",
+          "overall_rationale": "Reframe experience bullet points to highlight high velocity delivery.",
+          "actions": [
+            {
+              "claim": "Candidate is junior with only 4 years experience vs 5+ years senior target",
+              "action": "REWRITE_SUGGESTED",
+              "reasoning": "Reframe 4 years of experience to emphasize rapid scalable microservice delivery.",
+              "suggested_rewrite": "Engineered scalable backend microservices and high-throughput PostgreSQL databases serving 1M+ daily transactions across 4 intensive years of core production engineering.",
+              "requires_human_approval": true
+            }
+          ]
+        },
+        "duration_ms": 0
+      }
+    ]
+  },
+  "human_approval_lifecycle": {
+    "step_1_proposal": {
+      "action_id": "f1cd80f0-3354-41bc-8e6d-78660bf2c84a",
+      "action_type": "REWRITE_SUGGESTED",
+      "status": "pending",
+      "applied": false,
+      "requires_human_approval": true,
+      "suggested_rewrite": "Engineered scalable backend microservices and high-throughput PostgreSQL databases serving 1M+ daily transactions across 4 intensive years of core production engineering.",
+      "created_at": "2026-08-31T13:15:03.153Z"
+    },
+    "step_2_human_review": {
+      "decision": "APPROVED_BY_CANDIDATE",
+      "endpoint_called": "POST /applications/4b534a69-03f3-49e8-9be0-eca36959c31f/strategist-actions/f1cd80f0-3354-41bc-8e6d-78660bf2c84a/approve",
+      "auth_context": "Bearer JWT (demo@truth-tracker.io)"
+    },
+    "step_3_persisted_state": {
+      "action_id": "f1cd80f0-3354-41bc-8e6d-78660bf2c84a",
+      "status": "approved",
+      "applied": true,
+      "applied_at": "2026-08-31T13:15:03.156Z",
+      "resolved_at": "2026-08-31T13:15:03.156Z",
+      "resume_mutation_occurred": false,
+      "safety_guarantee": "Record-only decision log. No resumes table records were modified."
+    }
+  }
+}

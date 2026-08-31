@@ -1,0 +1,136 @@
+{
+  "trajectory_case": "03_hard_case_false_positive_avoidance",
+  "timestamp": "2026-08-31T13:15:03.142Z",
+  "summary": {
+    "baseline_score": 68,
+    "verified_score": 96,
+    "overall_recommendation": "APPLY",
+    "verifications_count": 2,
+    "strategist_actions_count": 1
+  },
+  "baseline_score": 68,
+  "verified_score": 96,
+  "mismatch_reasons": [
+    "Claims of 1.2M req/sec across 4-person pod may be exaggerated metric",
+    "Tail latency reduction to 4ms via Linux kernel buffer tuning requires verification"
+  ],
+  "verifications": [
+    {
+      "claim": "Claims of 1.2M req/sec across 4-person pod may be exaggerated metric",
+      "supported": true,
+      "evidence": "Substantiated by concrete technical stack (Go, memory-mapped I/O, epoll network sockets, Kafka partition tuning). Metric is physically feasible and verified.",
+      "flag_type": "none"
+    },
+    {
+      "claim": "Tail latency reduction to 4ms via Linux kernel buffer tuning requires verification",
+      "supported": true,
+      "evidence": "Substantiated by documented Linux eBPF filter deployment and TCP/IP socket tuning in core systems stack.",
+      "flag_type": "none"
+    }
+  ],
+  "strategist_actions": [
+    {
+      "claim": "Claims of 1.2M req/sec across 4-person pod may be exaggerated metric",
+      "action": "APPLY_WITH_CAVEAT",
+      "reasoning": "Metrics are valid; be prepared to walk through socket architecture during systems design round.",
+      "caveat_note": "Prepare architectural diagram of the Go/epoll proxy.",
+      "requires_human_approval": false
+    }
+  ],
+  "overall_strategy": {
+    "recommendation": "APPLY",
+    "rationale": "Top 1% systems engineering profile. Extreme metrics were fact-checked and verified against kernel/Go implementation evidence."
+  },
+  "trajectory": [
+    {
+      "step": "extractor",
+      "input": {
+        "resume_length": 1100
+      },
+      "output": {
+        "skills": [
+          "Go",
+          "C++",
+          "Rust",
+          "Linux eBPF",
+          "TCP/IP",
+          "Kafka",
+          "Redis",
+          "PostgreSQL"
+        ],
+        "years_experience": 6,
+        "tools": [
+          "Docker",
+          "Kubernetes",
+          "AWS",
+          "Epoll"
+        ]
+      },
+      "duration_ms": 1
+    },
+    {
+      "step": "matcher",
+      "input": {
+        "profile_summary": {
+          "skills_count": 8,
+          "years_experience": 6
+        },
+        "jd_length": 235
+      },
+      "output": {
+        "fit_score": 68,
+        "mismatch_reasons": [
+          "Claims of 1.2M req/sec across 4-person pod may be exaggerated metric",
+          "Tail latency reduction to 4ms via Linux kernel buffer tuning requires verification"
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "verifier",
+      "input": {
+        "initial_fit_score": 68,
+        "claims_count": 2
+      },
+      "output": {
+        "verified_score": 96,
+        "verifications": [
+          {
+            "claim": "Claims of 1.2M req/sec across 4-person pod may be exaggerated metric",
+            "supported": true,
+            "evidence": "Substantiated by concrete technical stack (Go, memory-mapped I/O, epoll network sockets, Kafka partition tuning). Metric is physically feasible and verified.",
+            "flag_type": "none"
+          },
+          {
+            "claim": "Tail latency reduction to 4ms via Linux kernel buffer tuning requires verification",
+            "supported": true,
+            "evidence": "Substantiated by documented Linux eBPF filter deployment and TCP/IP socket tuning in core systems stack.",
+            "flag_type": "none"
+          }
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "strategist",
+      "input": {
+        "verified_score": 96,
+        "verifications_count": 2
+      },
+      "output": {
+        "overall_recommendation": "APPLY",
+        "overall_rationale": "Top 1% systems engineering profile. Extreme metrics were fact-checked and verified against kernel/Go implementation evidence.",
+        "actions": [
+          {
+            "claim": "Claims of 1.2M req/sec across 4-person pod may be exaggerated metric",
+            "action": "APPLY_WITH_CAVEAT",
+            "reasoning": "Metrics are valid; be prepared to walk through socket architecture during systems design round.",
+            "caveat_note": "Prepare architectural diagram of the Go/epoll proxy.",
+            "requires_human_approval": false
+          }
+        ]
+      },
+      "duration_ms": 0
+    }
+  ]
+}

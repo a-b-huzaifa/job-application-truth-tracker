@@ -1,18 +1,46 @@
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { extractResumeProfile } from './extractorService.js';
 import { matchProfileToJob } from './matcherService.js';
 import { verifyMatchAnalysis } from './verifierService.js';
 import { determineApplicationStrategy } from './strategistService.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const trajectoriesDir = path.resolve(__dirname, '../../../../hackathon/trajectories');
+
+/**
+ * Saves a trajectory payload to hackathon/trajectories/<name>.json
+ *
+ * @param {string} trajectoryName - Name of the file without extension
+ * @param {object} payload - Full trajectory and audit object
+ */
+export async function exportTrajectoryToFile(trajectoryName, payload) {
+  try {
+    await fs.mkdir(trajectoriesDir, { recursive: true });
+    const cleanName = trajectoryName.endsWith('.json') ? trajectoryName : `${trajectoryName}.json`;
+    const targetPath = path.join(trajectoriesDir, cleanName);
+    await fs.writeFile(targetPath, JSON.stringify(payload, null, 2), 'utf8');
+    return targetPath;
+  } catch (err) {
+    console.error(`[Orchestrator Error] Failed to export trajectory ${trajectoryName}:`, err);
+  }
+}
 
 /**
  * Orchestrates the full 4-stage Agentic analysis pipeline:
  * Extractor -> Matcher -> Verifier -> Strategist
  *
  * Logs step execution metadata and returns structured findings.
+ * Optionally exports the full execution trajectory to hackathon/trajectories/<name>.json.
  *
  * @param {object} params
  * @param {string} params.resumeContent - Raw resume content string
  * @param {string} params.jobDescription - Raw job description text
  * @param {string} [params.resumeId=null] - Optional resume UUID for persistent flag tracking
+ * @param {string} [params.exportTrajectoryName=null] - Optional trajectory filename for hackathon recording
+ * @param {object} [params.exportExtraData=null] - Additional metadata (e.g. human approval status)
  * @returns {Promise<{
  *   baseline_score: number,
  *   verified_score: number,
@@ -23,7 +51,13 @@ import { determineApplicationStrategy } from './strategistService.js';
  *   trajectory: Array<{step: string, input: any, output: any, duration_ms: number}>
  * }>}
  */
-export async function runAgenticAnalysis({ resumeContent, jobDescription, resumeId = null }) {
+export async function runAgenticAnalysis({
+  resumeContent,
+  jobDescription,
+  resumeId = null,
+  exportTrajectoryName = null,
+  exportExtraData = null,
+}) {
   if (!resumeContent || typeof resumeContent !== 'string') {
     throw new Error('Resume content is required for agentic analysis');
   }
@@ -106,7 +140,7 @@ export async function runAgenticAnalysis({ resumeContent, jobDescription, resume
     duration_ms: durStrategist,
   });
 
-  return {
+  const result = {
     baseline_score: baselineScore,
     verified_score: verifiedScore,
     mismatch_reasons: mismatchReasons,
@@ -118,8 +152,29 @@ export async function runAgenticAnalysis({ resumeContent, jobDescription, resume
     },
     trajectory: trajectory,
   };
+
+  // Export trajectory to hackathon/trajectories if requested
+  if (exportTrajectoryName) {
+    const exportPayload = {
+      trajectory_case: exportTrajectoryName,
+      timestamp: new Date().toISOString(),
+      summary: {
+        baseline_score: baselineScore,
+        verified_score: verifiedScore,
+        overall_recommendation: strategyResult.overall_recommendation,
+        verifications_count: verifications.length,
+        strategist_actions_count: strategyResult.actions?.length || 0,
+      },
+      ...result,
+      ...(exportExtraData ? { human_approval_lifecycle: exportExtraData } : {}),
+    };
+    await exportTrajectoryToFile(exportTrajectoryName, exportPayload);
+  }
+
+  return result;
 }
 
 export default {
   runAgenticAnalysis,
+  exportTrajectoryToFile,
 };

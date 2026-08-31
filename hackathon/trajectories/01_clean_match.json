@@ -1,0 +1,123 @@
+{
+  "trajectory_case": "01_clean_match",
+  "timestamp": "2026-08-31T13:15:03.103Z",
+  "summary": {
+    "baseline_score": 92,
+    "verified_score": 94,
+    "overall_recommendation": "APPLY",
+    "verifications_count": 1,
+    "strategist_actions_count": 1
+  },
+  "baseline_score": 92,
+  "verified_score": 94,
+  "mismatch_reasons": [
+    "Minor: Payment gateway / PCI-DSS compliance experience not explicitly listed"
+  ],
+  "verifications": [
+    {
+      "claim": "Payment gateway / PCI-DSS compliance experience not explicitly listed",
+      "supported": true,
+      "evidence": "No explicit PCI-DSS keywords; however core REST APIs and Postgres stack cleanly support payment integration.",
+      "flag_type": "none"
+    }
+  ],
+  "strategist_actions": [
+    {
+      "claim": "Payment gateway / PCI-DSS compliance experience not explicitly listed",
+      "action": "APPLY_WITH_CAVEAT",
+      "reasoning": "Standard payment library integration transfers easily from existing backend skills.",
+      "caveat_note": "Mention general API integration reliability in initial phone screen.",
+      "requires_human_approval": false
+    }
+  ],
+  "overall_strategy": {
+    "recommendation": "APPLY",
+    "rationale": "Clean tier-1 match on core React/Node/PostgreSQL stack. Candidate is ready for technical screening."
+  },
+  "trajectory": [
+    {
+      "step": "extractor",
+      "input": {
+        "resume_length": 473
+      },
+      "output": {
+        "skills": [
+          "JavaScript",
+          "TypeScript",
+          "Python",
+          "SQL",
+          "React",
+          "Next.js",
+          "Node.js",
+          "Express",
+          "PostgreSQL"
+        ],
+        "years_experience": 4,
+        "tools": [
+          "Docker",
+          "Git",
+          "Jest",
+          "Redis"
+        ]
+      },
+      "duration_ms": 2
+    },
+    {
+      "step": "matcher",
+      "input": {
+        "profile_summary": {
+          "skills_count": 9,
+          "years_experience": 4
+        },
+        "jd_length": 176
+      },
+      "output": {
+        "fit_score": 92,
+        "mismatch_reasons": [
+          "Minor: Payment gateway / PCI-DSS compliance experience not explicitly listed"
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "verifier",
+      "input": {
+        "initial_fit_score": 92,
+        "claims_count": 1
+      },
+      "output": {
+        "verified_score": 94,
+        "verifications": [
+          {
+            "claim": "Payment gateway / PCI-DSS compliance experience not explicitly listed",
+            "supported": true,
+            "evidence": "No explicit PCI-DSS keywords; however core REST APIs and Postgres stack cleanly support payment integration.",
+            "flag_type": "none"
+          }
+        ]
+      },
+      "duration_ms": 1
+    },
+    {
+      "step": "strategist",
+      "input": {
+        "verified_score": 94,
+        "verifications_count": 1
+      },
+      "output": {
+        "overall_recommendation": "APPLY",
+        "overall_rationale": "Clean tier-1 match on core React/Node/PostgreSQL stack. Candidate is ready for technical screening.",
+        "actions": [
+          {
+            "claim": "Payment gateway / PCI-DSS compliance experience not explicitly listed",
+            "action": "APPLY_WITH_CAVEAT",
+            "reasoning": "Standard payment library integration transfers easily from existing backend skills.",
+            "caveat_note": "Mention general API integration reliability in initial phone screen.",
+            "requires_human_approval": false
+          }
+        ]
+      },
+      "duration_ms": 1
+    }
+  ]
+}

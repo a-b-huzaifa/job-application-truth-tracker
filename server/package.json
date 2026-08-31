@@ -9,7 +9,8 @@
     "migrate": "node migrate.js",
     "seed": "node seed.js",
     "test": "node --test tests/*.test.js tests/agentic/*.test.js",
-    "evaluate": "node scripts/evaluate.js"
+    "evaluate": "node scripts/evaluate.js",
+    "export:trajectories": "node scripts/exportTrajectories.js"
   },
   "keywords": [],
   "author": "",

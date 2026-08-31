@@ -1,0 +1,131 @@
+{
+  "trajectory_case": "04_skip_role_recommended",
+  "timestamp": "2026-08-31T13:15:03.145Z",
+  "summary": {
+    "baseline_score": 20,
+    "verified_score": 15,
+    "overall_recommendation": "SKIP_ROLE",
+    "verifications_count": 2,
+    "strategist_actions_count": 1
+  },
+  "baseline_score": 20,
+  "verified_score": 15,
+  "mismatch_reasons": [
+    "Missing bare-metal C and ARM Cortex assembly programming",
+    "Missing real-time operating system (RTOS) kernel driver experience",
+    "Missing oscilloscope hardware electrical signal debugging"
+  ],
+  "verifications": [
+    {
+      "claim": "Missing bare-metal C and ARM Cortex assembly programming",
+      "supported": true,
+      "evidence": "Resume is strictly web stack (Node/React/SQL). No low-level hardware or C assembly present.",
+      "flag_type": "none"
+    },
+    {
+      "claim": "Missing real-time operating system (RTOS) kernel driver experience",
+      "supported": true,
+      "evidence": "No embedded or RTOS operating systems mentioned.",
+      "flag_type": "none"
+    }
+  ],
+  "strategist_actions": [
+    {
+      "claim": "Missing bare-metal C and ARM Cortex assembly programming",
+      "action": "SKIP_ROLE_RECOMMENDED",
+      "reasoning": "Role requires 8+ years embedded hardware engineering. Web profile cannot bridge gap without retraining.",
+      "requires_human_approval": true
+    }
+  ],
+  "overall_strategy": {
+    "recommendation": "SKIP_ROLE",
+    "rationale": "Fundamental hardware/embedded barrier. Candidate background is web applications."
+  },
+  "trajectory": [
+    {
+      "step": "extractor",
+      "input": {
+        "resume_length": 473
+      },
+      "output": {
+        "skills": [
+          "JavaScript",
+          "TypeScript",
+          "Node.js",
+          "React",
+          "PostgreSQL"
+        ],
+        "years_experience": 4,
+        "tools": [
+          "Docker",
+          "Git"
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "matcher",
+      "input": {
+        "profile_summary": {
+          "skills_count": 5,
+          "years_experience": 4
+        },
+        "jd_length": 164
+      },
+      "output": {
+        "fit_score": 20,
+        "mismatch_reasons": [
+          "Missing bare-metal C and ARM Cortex assembly programming",
+          "Missing real-time operating system (RTOS) kernel driver experience",
+          "Missing oscilloscope hardware electrical signal debugging"
+        ]
+      },
+      "duration_ms": 1
+    },
+    {
+      "step": "verifier",
+      "input": {
+        "initial_fit_score": 20,
+        "claims_count": 3
+      },
+      "output": {
+        "verified_score": 15,
+        "verifications": [
+          {
+            "claim": "Missing bare-metal C and ARM Cortex assembly programming",
+            "supported": true,
+            "evidence": "Resume is strictly web stack (Node/React/SQL). No low-level hardware or C assembly present.",
+            "flag_type": "none"
+          },
+          {
+            "claim": "Missing real-time operating system (RTOS) kernel driver experience",
+            "supported": true,
+            "evidence": "No embedded or RTOS operating systems mentioned.",
+            "flag_type": "none"
+          }
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "strategist",
+      "input": {
+        "verified_score": 15,
+        "verifications_count": 2
+      },
+      "output": {
+        "overall_recommendation": "SKIP_ROLE",
+        "overall_rationale": "Fundamental hardware/embedded barrier. Candidate background is web applications.",
+        "actions": [
+          {
+            "claim": "Missing bare-metal C and ARM Cortex assembly programming",
+            "action": "SKIP_ROLE_RECOMMENDED",
+            "reasoning": "Role requires 8+ years embedded hardware engineering. Web profile cannot bridge gap without retraining.",
+            "requires_human_approval": true
+          }
+        ]
+      },
+      "duration_ms": 0
+    }
+  ]
+}

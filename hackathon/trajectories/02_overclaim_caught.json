@@ -1,0 +1,141 @@
+{
+  "trajectory_case": "02_overclaim_caught",
+  "timestamp": "2026-08-31T13:15:03.140Z",
+  "summary": {
+    "baseline_score": 82,
+    "verified_score": 18,
+    "overall_recommendation": "SKIP_ROLE",
+    "verifications_count": 3,
+    "strategist_actions_count": 1
+  },
+  "baseline_score": 82,
+  "verified_score": 18,
+  "mismatch_reasons": [
+    "Candidate claims Principal Enterprise Architect tenure with 2 years experience",
+    "Candidate claims global petabyte distributed systems architecture",
+    "Candidate claims quantum cryptography leadership"
+  ],
+  "verifications": [
+    {
+      "claim": "Candidate claims Principal Enterprise Architect tenure with 2 years experience",
+      "supported": false,
+      "evidence": "Work history reflects junior WordPress styling and template maintenance. Title of Principal Architect is an extreme overclaim.",
+      "flag_type": "unsupported"
+    },
+    {
+      "claim": "Candidate claims global petabyte distributed systems architecture",
+      "supported": false,
+      "evidence": "No petabyte infrastructure technologies, cloud certifications, or distributed databases listed in experience.",
+      "flag_type": "unsupported"
+    },
+    {
+      "claim": "Candidate claims quantum cryptography leadership",
+      "supported": true,
+      "evidence": "Phrase appears in summary but lacks any supporting coursework, research, or production evidence.",
+      "flag_type": "phrasing_risk"
+    }
+  ],
+  "strategist_actions": [
+    {
+      "claim": "Candidate claims Principal Enterprise Architect tenure with 2 years experience",
+      "action": "SKIP_ROLE_RECOMMENDED",
+      "reasoning": "Role requires 12+ years enterprise infrastructure leadership. Candidate has 2 years web assistance.",
+      "requires_human_approval": true
+    }
+  ],
+  "overall_strategy": {
+    "recommendation": "SKIP_ROLE",
+    "rationale": "Fundamental qualification and seniority deficit. Resume claims are unsubstantiated by work history."
+  },
+  "trajectory": [
+    {
+      "step": "extractor",
+      "input": {
+        "resume_length": 614
+      },
+      "output": {
+        "skills": [
+          "JavaScript",
+          "HTML5",
+          "CSS3",
+          "Python"
+        ],
+        "years_experience": 2,
+        "tools": [
+          "WordPress"
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "matcher",
+      "input": {
+        "profile_summary": {
+          "skills_count": 4,
+          "years_experience": 2
+        },
+        "jd_length": 167
+      },
+      "output": {
+        "fit_score": 82,
+        "mismatch_reasons": [
+          "Candidate claims Principal Enterprise Architect tenure with 2 years experience",
+          "Candidate claims global petabyte distributed systems architecture",
+          "Candidate claims quantum cryptography leadership"
+        ]
+      },
+      "duration_ms": 0
+    },
+    {
+      "step": "verifier",
+      "input": {
+        "initial_fit_score": 82,
+        "claims_count": 3
+      },
+      "output": {
+        "verified_score": 18,
+        "verifications": [
+          {
+            "claim": "Candidate claims Principal Enterprise Architect tenure with 2 years experience",
+            "supported": false,
+            "evidence": "Work history reflects junior WordPress styling and template maintenance. Title of Principal Architect is an extreme overclaim.",
+            "flag_type": "unsupported"
+          },
+          {
+            "claim": "Candidate claims global petabyte distributed systems architecture",
+            "supported": false,
+            "evidence": "No petabyte infrastructure technologies, cloud certifications, or distributed databases listed in experience.",
+            "flag_type": "unsupported"
+          },
+          {
+            "claim": "Candidate claims quantum cryptography leadership",
+            "supported": true,
+            "evidence": "Phrase appears in summary but lacks any supporting coursework, research, or production evidence.",
+            "flag_type": "phrasing_risk"
+          }
+        ]
+      },
+      "duration_ms": 34
+    },
+    {
+      "step": "strategist",
+      "input": {
+        "verified_score": 18,
+        "verifications_count": 3
+      },
+      "output": {
+        "overall_recommendation": "SKIP_ROLE",
+        "overall_rationale": "Fundamental qualification and seniority deficit. Resume claims are unsubstantiated by work history.",
+        "actions": [
+          {
+            "claim": "Candidate claims Principal Enterprise Architect tenure with 2 years experience",
+            "action": "SKIP_ROLE_RECOMMENDED",
+            "reasoning": "Role requires 12+ years enterprise infrastructure leadership. Candidate has 2 years web assistance.",
+            "requires_human_approval": true
+          }
+        ]
+      },
+      "duration_ms": 0
+    }
+  ]
+}
