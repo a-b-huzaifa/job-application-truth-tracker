@@ -26,7 +26,7 @@ Instead of maintaining static spreadsheets or relying on opaque applicant tracki
                                           |
                                           v
 +===================================================================================+
-|                             EXPRESS APPLICATION LAYER                             |
+|                             EXPRESS APPLICATION LAYER (server/)                   |
 |                                                                                   |
 |  +-----------------------------------------------------------------------------+  |
 |  | Middleware: Auth (Bearer JWT Verification) | Validation (Zod Schema Guard)  |  |
@@ -46,9 +46,9 @@ Instead of maintaining static spreadsheets or relying on opaque applicant tracki
 |  +-----------------------------------------------------------------------------+  |
 |                     |                                         |                   |
 |                     v (External LLM)                          v (Export Storage)  |
-|            +-----------------+                       +-----------------+          |
-|            | Google Gemini   |                       | ./outputs/*.pdf |          |
-|            | 1.5 Flash API   |                       +-----------------+          |
+|            +-----------------+                       +-----------------------+    |
+|            | Google Gemini   |                       | server/outputs/*.pdf  |    |
+|            | 1.5 Flash API   |                       +-----------------------+    |
 |            +-----------------+                                                    |
 |                                         |                                         |
 |  +-----------------------------------------------------------------------------+  |
@@ -66,10 +66,10 @@ Instead of maintaining static spreadsheets or relying on opaque applicant tracki
 |            Tables: users, resumes, applications, llm_analyses, weekly_reports      |
 +=========================================^=========================================+
                                           | (Periodic Scan)
-                            +---------------------------+
-                            | Background Worker (Cron)  |
-                            |  src/jobs/staleCheckJob   |
-                            +---------------------------+
+                            +----------------------------------+
+                            | Background Worker (Cron)         |
+                            |  server/src/jobs/staleCheckJob   |
+                            +----------------------------------+
 ```
 
 ---
@@ -83,12 +83,12 @@ Instead of maintaining static spreadsheets or relying on opaque applicant tracki
 ### Step 1: Clone & Install Dependencies
 ```bash
 git clone https://github.com/a-b-huzaifa/job-application-truth-tracker.git
-cd job-application-truth-tracker
+cd job-application-truth-tracker/server
 npm install
 ```
 
 ### Step 2: Configure Environment
-Copy the `.env.example` file to `.env`:
+Copy the `.env.example` file to `.env` inside `server/`:
 ```bash
 cp .env.example .env
 ```
@@ -97,11 +97,11 @@ Generate a secure 256-bit JWT secret:
 ```bash
 node -e "console.log(crypto.randomBytes(32).toString('hex'))"
 ```
-Paste this into `.env` as `JWT_SECRET`. Add your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/) as `GEMINI_API_KEY`.
+Paste this into `server/.env` as `JWT_SECRET`. Add your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/) as `GEMINI_API_KEY`.
 
 ### Step 3: Start Database & Run Migrations
 ```bash
-# Start PostgreSQL in background
+# Start PostgreSQL in background (inside server/)
 docker compose up -d
 
 # Run database schema migrations
@@ -113,7 +113,7 @@ node seed.js
 
 ### Step 4: Run Tests & Start Server
 ```bash
-# Execute the full 48-test automated suite
+# Execute the full 48-test automated suite (inside server/)
 npm test
 
 # Start the Express server (default: port 3000)
@@ -126,12 +126,12 @@ npm start
 
 | Graded Concept | Description | Implementation Location |
 | :--- | :--- | :--- |
-| **1. Cryptographic Caching** | SHA-256 hashing of JDs to eliminate redundant LLM calls | • `src/services/hashService.js`<br>• `src/repositories/analysisRepository.js`<br>• `src/services/analysisService.js`<br>• Index `idx_llm_analyses_jd_hash` |
-| **2. Background Jobs / Cron** | Scheduled dormancy scanner identifying ghosted applications (>21 days) | • `src/config/staleness.js`<br>• `src/services/staleCheckService.js`<br>• `src/jobs/staleCheckJob.js`<br>• `src/routes/staleCheck.js` |
-| **3. Layered 4-Tier Architecture** | Separation of Routes $\to$ Middleware $\to$ Services $\to$ Repositories $\to$ DB | • `src/routes/`<br>• `src/middleware/`<br>• `src/services/`<br>• `src/repositories/`<br>• `src/db.js` |
-| **4. File Generation (PDF)** | Weekly executive truth reports with conversion metrics compiled to disk | • `src/services/reportDataService.js`<br>• `src/services/pdfReportService.js`<br>• `src/repositories/reportRepository.js`<br>• `src/routes/reports.js` |
-| **5. LLM Structured Output** | Resume-to-Job fit evaluation with Zod schema validation & automatic retry | • `src/services/analysisService.js`<br>• `src/routes/analyze.js` |
-| **6. Authentication & Security** | User registration, bcrypt password hashing, JWT auth, tenant isolation | • `src/middleware/auth.js`<br>• `src/repositories/userRepository.js`<br>• `src/routes/auth.js`<br>• `tests/auth.test.js` |
+| **1. Cryptographic Caching** | SHA-256 hashing of JDs to eliminate redundant LLM calls | • `server/src/services/hashService.js`<br>• `server/src/repositories/analysisRepository.js`<br>• `server/src/services/analysisService.js`<br>• Index `idx_llm_analyses_jd_hash` |
+| **2. Background Jobs / Cron** | Scheduled dormancy scanner identifying ghosted applications (>21 days) | • `server/src/config/staleness.js`<br>• `server/src/services/staleCheckService.js`<br>• `server/src/jobs/staleCheckJob.js`<br>• `server/src/routes/staleCheck.js` |
+| **3. Layered 4-Tier Architecture** | Separation of Routes $\to$ Middleware $\to$ Services $\to$ Repositories $\to$ DB | • `server/src/routes/`<br>• `server/src/middleware/`<br>• `server/src/services/`<br>• `server/src/repositories/`<br>• `server/src/db.js` |
+| **4. File Generation (PDF)** | Weekly executive truth reports with conversion metrics compiled to disk | • `server/src/services/reportDataService.js`<br>• `server/src/services/pdfReportService.js`<br>• `server/src/repositories/reportRepository.js`<br>• `server/src/routes/reports.js` |
+| **5. LLM Structured Output** | Resume-to-Job fit evaluation with Zod schema validation & automatic retry | • `server/src/services/analysisService.js`<br>• `server/src/routes/analyze.js` |
+| **6. Authentication & Security** | User registration, bcrypt password hashing, JWT auth, tenant isolation | • `server/src/middleware/auth.js`<br>• `server/src/repositories/userRepository.js`<br>• `server/src/routes/auth.js`<br>• `server/tests/auth.test.js` |
 
 ---
 

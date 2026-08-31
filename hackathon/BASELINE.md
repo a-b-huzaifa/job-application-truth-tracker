@@ -8,12 +8,12 @@ This document establishes the official **pre-hackathon baseline** for the Job Ap
 
 The current analysis system is a **single-step, single-prompt LLM evaluation pipeline** that compares candidate resume text against a job description.
 
-- **Primary Entrypoint (Route)**: `POST /applications/:id/analyze` located at [`src/routes/analyze.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/routes/analyze.js)
-- **Primary Domain Service**: [`src/services/analysisService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/services/analysisService.js)
+- **Primary Entrypoint (Route)**: `POST /applications/:id/analyze` located at [`server/src/routes/analyze.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/routes/analyze.js)
+- **Primary Domain Service**: [`server/src/services/analysisService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/services/analysisService.js)
 - **Exact Primary Function**: `analyzeApplicationFit(resume, jobDescription, applicationId = null)`
 - **Internal Invocation Function**: `callGeminiModel(resumeContent, jobDescription, isRetry = false)`
-- **Cryptographic Caching Service**: [`src/services/hashService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/services/hashService.js) (`hashText`)
-- **Persistence Repository**: [`src/repositories/analysisRepository.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/repositories/analysisRepository.js)
+- **Cryptographic Caching Service**: [`server/src/services/hashService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/services/hashService.js) (`hashText`)
+- **Persistence Repository**: [`server/src/repositories/analysisRepository.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/repositories/analysisRepository.js)
 
 ---
 
@@ -26,12 +26,12 @@ The current analysis system is a **single-step, single-prompt LLM evaluation pip
    Fetch Application & Linked Resume (Postgres)
                  │
                  ▼
-   Compute SHA-256 Hash of JD (hashText in src/services/hashService.js)
+   Compute SHA-256 Hash of JD (hashText in server/src/services/hashService.js)
                  │
                  ├─── Cache Hit (llm_analyses table) ───► Return Cached Result { cached: true, fit_score, mismatch_reasons }
                  │
                  ▼ (Cache Miss)
-   callGeminiModel() in src/services/analysisService.js (Single Gemini 1.5 Flash Call)
+   callGeminiModel() in server/src/services/analysisService.js (Single Gemini 1.5 Flash Call)
                  │
                  ▼
    Zod Schema Validation (analysisSchema: fit_score [0-100], mismatch_reasons [string[]])
@@ -47,12 +47,12 @@ The current analysis system is a **single-step, single-prompt LLM evaluation pip
 
 ### Exact Code References
 
-#### 1. Primary Function Signature ([`src/services/analysisService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/services/analysisService.js#L93-L156)):
+#### 1. Primary Function Signature ([`server/src/services/analysisService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/services/analysisService.js#L93-L156)):
 ```javascript
 export async function analyzeApplicationFit(resume, jobDescription, applicationId = null)
 ```
 
-#### 2. LLM Invocation Logic ([`src/services/analysisService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/services/analysisService.js#L38-L83)):
+#### 2. LLM Invocation Logic ([`server/src/services/analysisService.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/services/analysisService.js#L38-L83)):
 ```javascript
 async function callGeminiModel(resumeContent, jobDescription, isRetry = false)
 ```
@@ -65,7 +65,7 @@ async function callGeminiModel(resumeContent, jobDescription, isRetry = false)
   }
   ```
 
-#### 3. Route Handler ([`src/routes/analyze.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/src/routes/analyze.js#L13-L59)):
+#### 3. Route Handler ([`server/src/routes/analyze.js`](file:///d:/FlyRank%20Internship/FlyRank%20Capstone%2010x%20Scope%20Job%20Application%20Truth%20Tracker/server/src/routes/analyze.js#L13-L59)):
 ```javascript
 router.post('/:id/analyze', async (req, res) => { ... })
 ```

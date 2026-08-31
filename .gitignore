@@ -1,5 +1,8 @@
 .env
 node_modules/
+server/.env
+server/node_modules/
+server/outputs/*.pdf
 outputs/*.pdf
 
 NOTES.md
