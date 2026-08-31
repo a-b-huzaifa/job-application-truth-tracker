@@ -268,3 +268,20 @@ To preserve data integrity, account safety, and focus on genuine insight, the fo
 
 - **Single-User Focused Design**: While the database schema, JWT auth middleware, and repositories enforce multi-tenant isolation (`WHERE user_id = $1`), the application is optimized as a lightweight, personal tracker.
 - **Company Field Modeling**: As documented in `DESIGN.md`, `company_name` is stored as a direct string rather than a relational `companies` table to eliminate unnecessary join complexity and avoid fuzzy deduplication overhead.
+
+---
+
+## 8. Agentic Workflows Hackathon Addendum 🤖
+
+This repository has been upgraded on branch `hackathon-agentic-v2` with an autonomous 4-Stage Multi-Agent Architecture, Human-in-the-Loop Decision Gates, Persistent Evaluative Memory, and an Interactive Brutalist UI.
+
+### Key Hackathon Artifacts & Documentation
+- 📄 **[BASELINE.md](hackathon/BASELINE.md)**: Specification and benchmark characterization of the legacy single-prompt Gemini evaluation pipeline (`analyzeApplicationFit` in `server/src/services/analysisService.js`).
+- 📊 **[EVALUATION.md](hackathon/EVALUATION.md)**: 18-case empirical benchmark comparison matrix across 4 testing regimes (straightforward matches, deliberate overclaims, sparse JDs, and the hard case).
+- 📜 **[CHANGELOG.md](hackathon/CHANGELOG.md)**: Engineering decision log detailing each stage of evolution, evidence cited, and architectural decisions (kept/revised/removed).
+- 🛠️ **[REPRODUCE.md](hackathon/REPRODUCE.md)**: Complete reproduction guide with exact commands, environment configurations, and expected runtimes for both backend and frontend.
+
+### Safety & Human-in-the-Loop Guarantees
+> [!IMPORTANT]
+> **Zero Autonomous Mutation Invariant:** No AI action, resume modification, or strategy decision is **ever** auto-executed without explicit human approval. Proposed resume rewrites and application strategy plans are persisted as advisory records requiring candidate sign-off via the Human Approval Gate (`POST /applications/:id/strategist-actions/:actionId/approve`), guaranteeing that no candidate resume content is ever mutated by automated background workflows.
+
