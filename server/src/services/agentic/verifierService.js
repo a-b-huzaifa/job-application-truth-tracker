@@ -123,18 +123,22 @@ Return your response strictly as a JSON object matching this structure:
   return result.response.text();
 }
 
+import verifierFlagRepository from '../../repositories/verifierFlagRepository.js';
+
 /**
  * Re-checks each claimed mismatch reason against the raw resume text and JD.
  * Flags unsupported hallucinations and phrasing risks, providing an audited fit score.
+ * Persists any 'unsupported' or 'phrasing_risk' flags to the database if resumeId is provided.
  *
  * @param {object} params
  * @param {string} params.resumeContent - Raw resume text
  * @param {string} params.jobDescription - Full job description text
  * @param {number} params.fitScore - Proposed fit score from Matcher
  * @param {string[]} params.mismatchReasons - Proposed mismatch reasons from Matcher
+ * @param {string} [params.resumeId=null] - Optional resume UUID for persistent flag memory
  * @returns {Promise<{verified_score: number, verifications: Array<{claim: string, supported: boolean, evidence: string, flag_type: 'none'|'unsupported'|'phrasing_risk'}>}>}
  */
-export async function verifyMatchAnalysis({ resumeContent, jobDescription, fitScore, mismatchReasons }) {
+export async function verifyMatchAnalysis({ resumeContent, jobDescription, fitScore, mismatchReasons, resumeId = null }) {
   if (!resumeContent || typeof resumeContent !== 'string') {
     throw new Error('Resume content is required for verification');
   }
@@ -156,19 +160,40 @@ export async function verifyMatchAnalysis({ resumeContent, jobDescription, fitSc
     };
   }
 
+  let validatedOutput = null;
+
   try {
     const rawOutput = await callGeminiVerifier(resumeContent, jobDescription, fitScore, mismatchReasons, false);
-    return parseAndValidateJson(rawOutput);
+    validatedOutput = parseAndValidateJson(rawOutput);
   } catch (initialError) {
     console.warn('[Verifier Warning] Initial verification parse failed. Retrying...', initialError.message);
     try {
       const retryOutput = await callGeminiVerifier(resumeContent, jobDescription, fitScore, mismatchReasons, true);
-      return parseAndValidateJson(retryOutput);
+      validatedOutput = parseAndValidateJson(retryOutput);
     } catch (retryError) {
       console.error('[Verifier Error] Verifier validation failed on retry:', retryError);
       throw new Error(`Failed to verify match claims: ${retryError.message}`);
     }
   }
+
+  // Persist flagged claims into verifier_flags table for memory tracking
+  if (resumeId && validatedOutput && Array.isArray(validatedOutput.verifications)) {
+    for (const item of validatedOutput.verifications) {
+      if (item.flag_type === 'unsupported' || item.flag_type === 'phrasing_risk') {
+        try {
+          await verifierFlagRepository.createVerifierFlag({
+            resumeId,
+            claimText: item.claim,
+            flagType: item.flag_type,
+          });
+        } catch (flagErr) {
+          console.error('[Verifier Error] Failed to persist verifier flag:', flagErr);
+        }
+      }
+    }
+  }
+
+  return validatedOutput;
 }
 
 export default {

@@ -12,6 +12,7 @@ import { determineApplicationStrategy } from './strategistService.js';
  * @param {object} params
  * @param {string} params.resumeContent - Raw resume content string
  * @param {string} params.jobDescription - Raw job description text
+ * @param {string} [params.resumeId=null] - Optional resume UUID for persistent flag tracking
  * @returns {Promise<{
  *   baseline_score: number,
  *   verified_score: number,
@@ -22,7 +23,7 @@ import { determineApplicationStrategy } from './strategistService.js';
  *   trajectory: Array<{step: string, input: any, output: any, duration_ms: number}>
  * }>}
  */
-export async function runAgenticAnalysis({ resumeContent, jobDescription }) {
+export async function runAgenticAnalysis({ resumeContent, jobDescription, resumeId = null }) {
   if (!resumeContent || typeof resumeContent !== 'string') {
     throw new Error('Resume content is required for agentic analysis');
   }
@@ -70,6 +71,7 @@ export async function runAgenticAnalysis({ resumeContent, jobDescription }) {
     jobDescription,
     fitScore: baselineScore,
     mismatchReasons,
+    resumeId,
   });
   const durVerifier = Date.now() - t2;
   trajectory.push({

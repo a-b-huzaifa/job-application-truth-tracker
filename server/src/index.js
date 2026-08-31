@@ -5,6 +5,8 @@ import authRoutes from './routes/auth.js';
 import resumeRoutes from './routes/resumes.js';
 import applicationRoutes from './routes/applications.js';
 import analyzeRoutes from './routes/analyze.js';
+import analyzeV2Routes from './routes/analyzeV2.js';
+import strategistApprovalRoutes from './routes/strategistApproval.js';
 import staleCheckRoutes from './routes/staleCheck.js';
 import reportRoutes from './routes/reports.js';
 import { startStaleCheckJob } from './jobs/staleCheckJob.js';
@@ -19,6 +21,8 @@ app.use('/auth', authRoutes);
 app.use('/resumes', resumeRoutes);
 app.use('/applications', applicationRoutes);
 app.use('/applications', analyzeRoutes);
+app.use('/applications', analyzeV2Routes);
+app.use('/applications', strategistApprovalRoutes);
 app.use('/applications', staleCheckRoutes);
 app.use('/reports', reportRoutes);
 

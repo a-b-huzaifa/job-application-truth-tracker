@@ -4,6 +4,8 @@ import applicationRepository from '../repositories/applicationRepository.js';
 import resumeRepository from '../repositories/resumeRepository.js';
 import { analyzeApplicationFit } from '../services/analysisService.js';
 import { runAgenticAnalysis } from '../services/agentic/orchestratorService.js';
+import { getResumePatternWarnings } from '../services/agentic/memoryService.js';
+import strategistActionRepository from '../repositories/strategistActionRepository.js';
 
 const router = express.Router();
 
@@ -50,11 +52,40 @@ router.post('/:id/analyze-v2', async (req, res) => {
       application.id
     );
 
-    // 4. Run 4-stage agentic analysis
+    // 4. Run 4-stage agentic analysis with persistent resumeId tracking
     const agenticResult = await runAgenticAnalysis({
       resumeContent: resume.content,
       jobDescription: application.job_description,
+      resumeId: resume.id,
     });
+
+    // 5. Persist generated strategist actions as pending decision records
+    const persistedActions = [];
+    for (const action of (agenticResult.strategist_actions || [])) {
+      const persisted = await strategistActionRepository.createStrategistAction({
+        userId: req.userId,
+        applicationId: application.id,
+        actionType: action.action,
+        payload: {
+          claim: action.claim,
+          reasoning: action.reasoning,
+          suggested_rewrite: action.suggested_rewrite || null,
+          caveat_note: action.caveat_note || null,
+          requires_human_approval: action.requires_human_approval,
+        },
+        status: 'pending',
+        applied: false,
+      });
+      persistedActions.push({
+        id: persisted.id,
+        ...action,
+        status: persisted.status,
+        applied: persisted.applied,
+      });
+    }
+
+    // 6. Fetch historical pattern warnings for this resume variant
+    const memoryData = await getResumePatternWarnings(resume.id);
 
     return res.status(200).json({
       message: 'Analysis v2 generated successfully',
@@ -71,8 +102,9 @@ router.post('/:id/analyze-v2', async (req, res) => {
         verified_score: agenticResult.verified_score,
         mismatch_reasons: agenticResult.mismatch_reasons,
         verifications: agenticResult.verifications,
-        strategist_actions: agenticResult.strategist_actions,
+        strategist_actions: persistedActions.length > 0 ? persistedActions : agenticResult.strategist_actions,
         overall_strategy: agenticResult.overall_strategy,
+        pattern_warnings: memoryData.pattern_warnings,
         trajectory: agenticResult.trajectory,
       },
     });

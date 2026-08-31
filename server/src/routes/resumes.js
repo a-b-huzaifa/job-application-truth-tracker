@@ -62,6 +62,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+import { getResumePatternWarnings } from '../services/agentic/memoryService.js';
+
+// GET /resumes/:id/insights — Expose historical verifier flag patterns and warnings
+router.get('/:id/insights', async (req, res) => {
+  try {
+    const resume = await resumeRepository.getResumeById(req.params.id, req.userId);
+    if (!resume) {
+      return res.status(404).json({
+        error: 'Resume not found',
+      });
+    }
+
+    const insights = await getResumePatternWarnings(resume.id);
+
+    return res.status(200).json({
+      resume_id: resume.id,
+      resume_name: resume.name,
+      ...insights,
+    });
+  } catch (error) {
+    console.error('Get resume insights error:', error);
+    return res.status(500).json({
+      error: error.message || 'Internal server error fetching resume insights',
+    });
+  }
+});
+
 // GET /resumes/:id — Get resume details by ID
 router.get('/:id', async (req, res) => {
   try {
