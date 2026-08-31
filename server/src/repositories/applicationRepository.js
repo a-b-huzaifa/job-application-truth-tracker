@@ -5,6 +5,7 @@ export async function createApplication(userId, {
   company_name,
   role_title,
   job_description,
+  job_url = null,
   platform,
   applied_at,
   status = 'applied',
@@ -13,16 +14,17 @@ export async function createApplication(userId, {
   const result = await query(
     `INSERT INTO applications (
       user_id, resume_id, company_name, role_title, job_description,
-      platform, applied_at, status, last_status_check
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      job_url, platform, applied_at, status, last_status_check
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING id, user_id, resume_id, company_name, role_title, job_description,
-              platform, applied_at, status, last_status_check, created_at`,
+              job_url, platform, applied_at, status, last_status_check, created_at`,
     [
       userId,
       resume_id,
       company_name,
       role_title,
       job_description,
+      job_url,
       platform,
       applied_at,
       status,
@@ -69,7 +71,7 @@ export async function getApplicationsByUserId(userId, {
   const sql = `
     SELECT 
       a.id, a.user_id, a.resume_id, a.company_name, a.role_title, 
-      a.job_description, a.platform, a.applied_at, a.status, 
+      a.job_description, a.job_url, a.platform, a.applied_at, a.status, 
       a.last_status_check, a.created_at,
       r.name as resume_name
     FROM applications a
@@ -102,7 +104,7 @@ export async function getApplicationById(id, userId) {
   const result = await query(
     `SELECT 
       a.id, a.user_id, a.resume_id, a.company_name, a.role_title, 
-      a.job_description, a.platform, a.applied_at, a.status, 
+      a.job_description, a.job_url, a.platform, a.applied_at, a.status, 
       a.last_status_check, a.created_at,
       r.name as resume_name
     FROM applications a
@@ -119,6 +121,7 @@ export async function updateApplication(id, userId, updates = {}) {
     'company_name',
     'role_title',
     'job_description',
+    'job_url',
     'platform',
     'applied_at',
     'status',
@@ -150,7 +153,7 @@ export async function updateApplication(id, userId, updates = {}) {
      SET ${fields.join(', ')}
      WHERE id = $${idIndex} AND user_id = $${userIndex}
      RETURNING id, user_id, resume_id, company_name, role_title, job_description,
-               platform, applied_at, status, last_status_check, created_at`,
+               job_url, platform, applied_at, status, last_status_check, created_at`,
     values
   );
 

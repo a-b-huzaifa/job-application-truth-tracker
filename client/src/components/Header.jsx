@@ -28,11 +28,21 @@ export default function Header() {
           >
             Dashboard
           </NavLink>
+          {isAuthenticated && (
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `brutalist-nav-link ${isActive ? 'active' : ''}`
+              }
+            >
+              Profile
+            </NavLink>
+          )}
 
           {isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                {user?.email}
+                {user?.name || user?.email}
               </span>
               <button
                 type="button"

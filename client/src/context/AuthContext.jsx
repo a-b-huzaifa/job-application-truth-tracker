@@ -31,6 +31,28 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const register = useCallback(async (name, email, password) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      // Strictly store in memory state
+      setToken(data.token);
+      setUser(data.user);
+      setAuthToken(data.token);
+      return data;
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -45,6 +67,7 @@ export function AuthProvider({ children }) {
     isLoading,
     error,
     login,
+    register,
     logout,
   };
 

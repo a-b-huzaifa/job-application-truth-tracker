@@ -1,4 +1,4 @@
-const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
+let configuredBaseUrl = (process.env.REACT_APP_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
 // In-memory token storage (never stored in localStorage as per security specification)
 let inMemoryToken = null;
@@ -17,13 +17,14 @@ export function clearAuthToken() {
 
 /**
  * Universal Fetch Wrapper for the Truth Tracker API
+ * Includes automatic dual-stack fallback (localhost -> 127.0.0.1 -> relative)
  *
  * @param {string} endpoint - Relative path (e.g. '/applications')
  * @param {RequestInit} [options={}] - Fetch options
  * @returns {Promise<any>} Parsed JSON response
  */
 export async function apiFetch(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -39,30 +40,57 @@ export async function apiFetch(endpoint, options = {}) {
     headers,
   };
 
-  const response = await fetch(url, config);
+  // Build candidate URL targets for robust Windows localhost resolution
+  const candidateUrls = [
+    `${configuredBaseUrl}${cleanEndpoint}`,
+    `http://127.0.0.1:3000${cleanEndpoint}`,
+    cleanEndpoint, // CRA development proxy fallback
+  ];
 
-  // Handle empty or 204 No Content
-  if (response.status === 204) {
-    return null;
+  let lastError = null;
+
+  for (const url of candidateUrls) {
+    try {
+      const response = await fetch(url, config);
+
+      // Handle empty or 204 No Content
+      if (response.status === 204) {
+        return null;
+      }
+
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
+      if (!response.ok) {
+        const errorMsg = (data && data.error) || (data && data.message) || response.statusText || 'API Request Failed';
+        const error = new Error(errorMsg);
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+
+      // If successful, memorize the working base URL for subsequent calls
+      if (url.startsWith('http://127.0.0.1:3000')) {
+        configuredBaseUrl = 'http://127.0.0.1:3000';
+      }
+
+      return data;
+    } catch (err) {
+      lastError = err;
+      // If it is an HTTP response error with status code (like 401 Unauthorized), do not retry candidate URLs
+      if (err.status) {
+        throw err;
+      }
+      // If it is a network failure (Failed to fetch), proceed to the next candidate URL
+    }
   }
 
-  let data;
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    data = await response.json();
-  } else {
-    data = await response.text();
-  }
-
-  if (!response.ok) {
-    const errorMsg = (data && data.error) || (data && data.message) || response.statusText || 'API Request Failed';
-    const error = new Error(errorMsg);
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-
-  return data;
+  throw lastError || new Error('Failed to connect to Truth Tracker API server');
 }
 
 const apiClient = {
@@ -70,7 +98,7 @@ const apiClient = {
   setAuthToken,
   getAuthToken,
   clearAuthToken,
-  API_BASE_URL,
+  API_BASE_URL: configuredBaseUrl,
 };
 
 export default apiClient;

@@ -8,6 +8,7 @@ import { auth } from '../middleware/auth.js';
 const router = express.Router();
 
 const registerSchema = z.object({
+  name: z.string().min(1, 'Name is required').optional(),
   email: z.string().email('Invalid email address format'),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
 });
@@ -19,7 +20,7 @@ const loginSchema = z.object({
 
 function generateToken(user) {
   return jwt.sign(
-    { userId: user.id, email: user.email },
+    { userId: user.id, email: user.email, name: user.name },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -39,7 +40,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const { email, password } = parseResult.data;
+    const { name, email, password } = parseResult.data;
 
     const existingUser = await userRepository.getUserByEmail(email.toLowerCase());
     if (existingUser) {
@@ -51,7 +52,7 @@ router.post('/register', async (req, res) => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    const newUser = await userRepository.createUser(email.toLowerCase(), passwordHash);
+    const newUser = await userRepository.createUser(name || null, email.toLowerCase(), passwordHash);
     const token = generateToken(newUser);
 
     return res.status(201).json({
@@ -59,6 +60,7 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: newUser.id,
+        name: newUser.name,
         email: newUser.email,
         created_at: newUser.created_at,
       },
@@ -108,6 +110,7 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
+        name: user.name,
         email: user.email,
         created_at: user.created_at,
       },
@@ -131,7 +134,12 @@ router.get('/me', auth, async (req, res) => {
     }
 
     return res.status(200).json({
-      user,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+      },
     });
   } catch (error) {
     console.error('Fetch me error:', error);

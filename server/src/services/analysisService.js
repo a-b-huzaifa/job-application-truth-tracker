@@ -46,7 +46,7 @@ async function callGeminiModel(resumeContent, jobDescription, isRetry = false) {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const prompt = isRetry
     ? `CRITICAL: You MUST return ONLY a valid, raw JSON object (NO markdown, NO extra text).

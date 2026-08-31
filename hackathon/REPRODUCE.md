@@ -81,20 +81,29 @@ npm run build
 
 ## 4. Running the Full Application Locally
 
-Open two terminal windows:
+### Option A: Unified Single Command (Recommended)
+From the root repository directory, run:
+```bash
+npm run dev
+```
+> Uses `concurrently` to start the backend Express server on `http://localhost:3000` (in cyan) and the React frontend on `http://localhost:3001` (in magenta) simultaneously with live reloading.
 
-### Terminal 1: Start Backend API Server
+---
+
+### Option B: Separate Terminals
+
+#### Terminal 1: Start Backend API Server
 ```bash
 cd server
 npm run dev
 # Server will start on http://localhost:3000
 ```
 
-### Terminal 2: Start Frontend Client
+#### Terminal 2: Start Frontend Client
 ```bash
 cd client
 npm start
-# Client will open on http://localhost:3000 (or http://localhost:3001 if port 3000 is occupied by server)
+# Client will open on http://localhost:3001
 ```
 
 ---

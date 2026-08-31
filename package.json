@@ -1,0 +1,18 @@
+{
+  "name": "job-application-truth-tracker-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Truth Tracker Multi-Agent Workspace",
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev --prefix server\" \"npm start --prefix client\"",
+    "start": "npm run dev",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm start --prefix client",
+    "test": "npm test --prefix server",
+    "build": "npm run build --prefix client",
+    "evaluate": "npm run evaluate --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

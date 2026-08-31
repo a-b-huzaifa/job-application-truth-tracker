@@ -1,6 +1,6 @@
 {
   "trajectory_case": "04_skip_role_recommended",
-  "timestamp": "2026-08-31T13:15:03.145Z",
+  "timestamp": "2026-08-31T15:08:13.707Z",
   "summary": {
     "baseline_score": 20,
     "verified_score": 15,
@@ -80,7 +80,7 @@
           "Missing oscilloscope hardware electrical signal debugging"
         ]
       },
-      "duration_ms": 1
+      "duration_ms": 0
     },
     {
       "step": "verifier",

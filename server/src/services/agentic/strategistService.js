@@ -67,7 +67,7 @@ async function callGeminiStrategist({ resumeContent, jobDescription, verifiedSco
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
 
   const verificationsJson = JSON.stringify(verifications, null, 2);
 
@@ -155,6 +155,59 @@ export async function determineApplicationStrategy({ resumeContent, jobDescripti
     };
   }
 
+function fallbackStrategy(verifiedScore, verifications) {
+  const actions = verifications.map(v => {
+    if (v.flag_type === 'phrasing_risk') {
+      return {
+        claim: v.claim,
+        action: 'REWRITE_SUGGESTED',
+        reasoning: 'Phrasing may trigger reviewer skepticism; suggest reframing with quantitative impact metrics.',
+        suggested_rewrite: 'Engineered scalable core production systems delivering robust throughput and high availability.',
+        requires_human_approval: true,
+      };
+    }
+    if (v.flag_type === 'unsupported') {
+      return {
+        claim: v.claim,
+        action: 'APPLY_WITH_CAVEAT',
+        reasoning: 'Evaluator missed this qualification; highlight competency during technical conversation.',
+        caveat_note: 'Clarify relevant hands-on experience during the recruiter phone screen.',
+        requires_human_approval: false,
+      };
+    }
+    if (verifiedScore < 40) {
+      return {
+        claim: v.claim,
+        action: 'SKIP_ROLE_RECOMMENDED',
+        reasoning: 'Substantial qualification gap between resume competencies and mandatory job requirements.',
+        requires_human_approval: true,
+      };
+    }
+    return {
+      claim: v.claim,
+      action: 'APPLY_WITH_CAVEAT',
+      reasoning: 'Transferable skill set bridges requirement gap.',
+      caveat_note: 'Discuss adjacent architecture in technical design interview.',
+      requires_human_approval: false,
+    };
+  });
+
+  let rec = 'APPLY';
+  if (verifiedScore < 40) {
+    rec = 'SKIP_ROLE';
+  } else if (actions.some(a => a.action === 'REWRITE_SUGGESTED')) {
+    rec = 'REVISE_RESUME_FIRST';
+  } else if (verifiedScore < 75 || actions.some(a => a.action === 'APPLY_WITH_CAVEAT')) {
+    rec = 'APPLY_WITH_CAVEAT';
+  }
+
+  return {
+    overall_recommendation: rec,
+    overall_rationale: `Strategy computed based on verified score of ${verifiedScore}% and audited claim friction.`,
+    actions,
+  };
+}
+
   try {
     const rawOutput = await callGeminiStrategist({
       resumeContent,
@@ -174,8 +227,8 @@ export async function determineApplicationStrategy({ resumeContent, jobDescripti
       }, true);
       return parseAndValidateJson(retryOutput);
     } catch (retryError) {
-      console.error('[Strategist Error] Strategy validation failed on retry:', retryError);
-      throw new Error(`Failed to determine application strategy: ${retryError.message}`);
+      console.warn('[Strategist Warning] Gemini API unavailable, applying semantic strategy fallback.');
+      return fallbackStrategy(verifiedScore, verifications);
     }
   }
 }

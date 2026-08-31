@@ -1,6 +1,6 @@
 {
   "trajectory_case": "02_overclaim_caught",
-  "timestamp": "2026-08-31T13:15:03.140Z",
+  "timestamp": "2026-08-31T15:08:13.705Z",
   "summary": {
     "baseline_score": 82,
     "verified_score": 18,
@@ -115,7 +115,7 @@
           }
         ]
       },
-      "duration_ms": 34
+      "duration_ms": 5
     },
     {
       "step": "strategist",

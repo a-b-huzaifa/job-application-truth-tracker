@@ -1,6 +1,6 @@
 {
   "trajectory_case": "05_rewrite_suggested_and_approved",
-  "timestamp": "2026-08-31T13:15:03.158Z",
+  "timestamp": "2026-08-31T15:08:13.713Z",
   "summary": {
     "baseline_score": 72,
     "verified_score": 82,
@@ -91,7 +91,7 @@
             }
           ]
         },
-        "duration_ms": 2
+        "duration_ms": 1
       },
       {
         "step": "strategist",
@@ -112,31 +112,31 @@
             }
           ]
         },
-        "duration_ms": 0
+        "duration_ms": 1
       }
     ]
   },
   "human_approval_lifecycle": {
     "step_1_proposal": {
-      "action_id": "f1cd80f0-3354-41bc-8e6d-78660bf2c84a",
+      "action_id": "30534e96-3edc-4e5d-b92e-a3f24b73d8e9",
       "action_type": "REWRITE_SUGGESTED",
       "status": "pending",
       "applied": false,
       "requires_human_approval": true,
       "suggested_rewrite": "Engineered scalable backend microservices and high-throughput PostgreSQL databases serving 1M+ daily transactions across 4 intensive years of core production engineering.",
-      "created_at": "2026-08-31T13:15:03.153Z"
+      "created_at": "2026-08-31T15:08:13.711Z"
     },
     "step_2_human_review": {
       "decision": "APPROVED_BY_CANDIDATE",
-      "endpoint_called": "POST /applications/4b534a69-03f3-49e8-9be0-eca36959c31f/strategist-actions/f1cd80f0-3354-41bc-8e6d-78660bf2c84a/approve",
+      "endpoint_called": "POST /applications/4b534a69-03f3-49e8-9be0-eca36959c31f/strategist-actions/30534e96-3edc-4e5d-b92e-a3f24b73d8e9/approve",
       "auth_context": "Bearer JWT (demo@truth-tracker.io)"
     },
     "step_3_persisted_state": {
-      "action_id": "f1cd80f0-3354-41bc-8e6d-78660bf2c84a",
+      "action_id": "30534e96-3edc-4e5d-b92e-a3f24b73d8e9",
       "status": "approved",
       "applied": true,
-      "applied_at": "2026-08-31T13:15:03.156Z",
-      "resolved_at": "2026-08-31T13:15:03.156Z",
+      "applied_at": "2026-08-31T15:08:13.712Z",
+      "resolved_at": "2026-08-31T15:08:13.712Z",
       "resume_mutation_occurred": false,
       "safety_guarantee": "Record-only decision log. No resumes table records were modified."
     }

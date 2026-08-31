@@ -1,6 +1,6 @@
 {
   "trajectory_case": "03_hard_case_false_positive_avoidance",
-  "timestamp": "2026-08-31T13:15:03.142Z",
+  "timestamp": "2026-08-31T15:08:13.706Z",
   "summary": {
     "baseline_score": 68,
     "verified_score": 96,
@@ -66,7 +66,7 @@
           "Epoll"
         ]
       },
-      "duration_ms": 1
+      "duration_ms": 0
     },
     {
       "step": "matcher",
