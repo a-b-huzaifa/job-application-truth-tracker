@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import http from 'http';
+import app from '../../src/index.js';
+import { pool } from '../../src/db.js';
 import {
   extractResumeProfile,
   setCustomAiClient as setExtractorMock,
@@ -15,11 +18,44 @@ import {
   setCustomAiClient as setVerifierMock,
   resetCustomAiClient as resetVerifierMock,
 } from '../../src/services/agentic/verifierService.js';
+import {
+  determineApplicationStrategy,
+  setCustomAiClient as setStrategistMock,
+  resetCustomAiClient as resetStrategistMock,
+} from '../../src/services/agentic/strategistService.js';
+import {
+  setCustomAiClient as setBaselineMock,
+  resetCustomAiClient as resetBaselineMock,
+} from '../../src/services/analysisService.js';
+import { runAgenticAnalysis } from '../../src/services/agentic/orchestratorService.js';
+
+let server;
+let baseUrl;
+
+test.before(async () => {
+  await new Promise((resolve) => {
+    server = http.createServer(app);
+    server.listen(0, () => {
+      const port = server.address().port;
+      baseUrl = `http://127.0.0.1:${port}`;
+      resolve();
+    });
+  });
+});
+
+test.after(async () => {
+  if (server) {
+    await new Promise((resolve) => server.close(resolve));
+  }
+  await pool.end();
+});
 
 test.afterEach(() => {
   resetExtractorMock();
   resetMatcherMock();
   resetVerifierMock();
+  resetStrategistMock();
+  resetBaselineMock();
 });
 
 test('Agentic Services Suite - Extractor, Matcher, and Verifier', async (t) => {
@@ -103,8 +139,6 @@ test('Agentic Services Suite - Extractor, Matcher, and Verifier', async (t) => {
   });
 
   await t.test('Verifier Service - Correctly flags "unsupported" for false/hallucinated mismatch claims', async () => {
-    // Scenario: Matcher mistakenly claimed the candidate has no Docker experience,
-    // but the raw resume clearly lists Docker.
     const claimedMismatches = [
       'Candidate lacks containerization and Docker knowledge',
     ];
@@ -112,7 +146,7 @@ test('Agentic Services Suite - Extractor, Matcher, and Verifier', async (t) => {
     setVerifierMock({
       async generateContent() {
         return JSON.stringify({
-          verified_score: 90, // adjusted upward because the Docker gap was false
+          verified_score: 90,
           verifications: [
             {
               claim: 'Candidate lacks containerization and Docker knowledge',
@@ -142,9 +176,6 @@ test('Agentic Services Suite - Extractor, Matcher, and Verifier', async (t) => {
   });
 
   await t.test('Verifier Service - Correctly flags "phrasing_risk" for exaggerated or misleading wording', async () => {
-    // Scenario: Candidate has 4 years experience. Matcher claimed:
-    // "Candidate is completely junior and entirely unqualified in seniority."
-    // This is technically below 5 years, but phrased as an extreme overclaim.
     const claimedMismatches = [
       'Candidate is completely unqualified and lacks fundamental engineering experience',
     ];
@@ -243,5 +274,357 @@ test('Agentic Services Suite - Extractor, Matcher, and Verifier', async (t) => {
 
     assert.equal(result.verified_score, 100);
     assert.deepEqual(result.verifications, []);
+  });
+});
+
+test('Strategist Service Suite - Decisions & Human Approval Guards', async (t) => {
+  const sampleResume = 'Full Stack Engineer with 4 years Node and React.';
+  const sampleJD = 'Senior Backend Engineer with 6+ years Go, Kubernetes, and AWS.';
+
+  await t.test('Strategist decides REWRITE_SUGGESTED with requires_human_approval: true', async () => {
+    setStrategistMock({
+      async generateContent() {
+        return JSON.stringify({
+          overall_recommendation: 'REVISE_RESUME_FIRST',
+          overall_rationale: 'Phrasing risk detected in years of experience.',
+          actions: [
+            {
+              claim: 'Candidate is completely junior and unqualified',
+              action: 'REWRITE_SUGGESTED',
+              reasoning: 'Candidate has 4 solid years; reframe to emphasize rapid senior-level delivery.',
+              suggested_rewrite: 'Engineered scalable backend microservices serving 1M+ requests daily across 4 years of core production engineering.',
+              requires_human_approval: true,
+            },
+          ],
+        });
+      },
+    });
+
+    const res = await determineApplicationStrategy({
+      resumeContent: sampleResume,
+      jobDescription: sampleJD,
+      verifiedScore: 78,
+      verifications: [
+        {
+          claim: 'Candidate is completely junior and unqualified',
+          supported: true,
+          evidence: 'Candidate has 4 years experience.',
+          flag_type: 'phrasing_risk',
+        },
+      ],
+    });
+
+    assert.equal(res.actions.length, 1);
+    assert.equal(res.actions[0].action, 'REWRITE_SUGGESTED');
+    assert.equal(res.actions[0].requires_human_approval, true);
+    assert.ok(res.actions[0].suggested_rewrite);
+  });
+
+  await t.test('Strategist decides APPLY_WITH_CAVEAT with requires_human_approval: false', async () => {
+    setStrategistMock({
+      async generateContent() {
+        return JSON.stringify({
+          overall_recommendation: 'APPLY_WITH_CAVEAT',
+          overall_rationale: 'Missing minor auxiliary tool; safe to proceed with caveat.',
+          actions: [
+            {
+              claim: 'Missing explicit AWS cloud infrastructure experience',
+              action: 'APPLY_WITH_CAVEAT',
+              reasoning: 'Candidate knows Docker/Postgres; AWS concepts transfer easily.',
+              caveat_note: 'Address cloud transferability during phone screen.',
+              requires_human_approval: false,
+            },
+          ],
+        });
+      },
+    });
+
+    const res = await determineApplicationStrategy({
+      resumeContent: sampleResume,
+      jobDescription: sampleJD,
+      verifiedScore: 85,
+      verifications: [
+        {
+          claim: 'Missing explicit AWS cloud infrastructure experience',
+          supported: true,
+          evidence: 'No AWS in resume',
+          flag_type: 'none',
+        },
+      ],
+    });
+
+    assert.equal(res.actions.length, 1);
+    assert.equal(res.actions[0].action, 'APPLY_WITH_CAVEAT');
+    assert.equal(res.actions[0].requires_human_approval, false);
+    assert.ok(res.actions[0].caveat_note);
+  });
+
+  await t.test('Strategist decides SKIP_ROLE_RECOMMENDED with requires_human_approval: true', async () => {
+    setStrategistMock({
+      async generateContent() {
+        return JSON.stringify({
+          overall_recommendation: 'SKIP_ROLE',
+          overall_rationale: 'Fundamental qualification deficit.',
+          actions: [
+            {
+              claim: 'Missing mandatory 6+ years Go distributed consensus experience',
+              action: 'SKIP_ROLE_RECOMMENDED',
+              reasoning: 'Candidate has zero Go experience for a principal Go role.',
+              requires_human_approval: true,
+            },
+          ],
+        });
+      },
+    });
+
+    const res = await determineApplicationStrategy({
+      resumeContent: sampleResume,
+      jobDescription: sampleJD,
+      verifiedScore: 35,
+      verifications: [
+        {
+          claim: 'Missing mandatory 6+ years Go distributed consensus experience',
+          supported: true,
+          evidence: 'Candidate is JavaScript/TypeScript only',
+          flag_type: 'none',
+        },
+      ],
+    });
+
+    assert.equal(res.actions.length, 1);
+    assert.equal(res.actions[0].action, 'SKIP_ROLE_RECOMMENDED');
+    assert.equal(res.actions[0].requires_human_approval, true);
+  });
+});
+
+test('Orchestrator Service Suite - End-to-End Pipeline & Trajectory', async (t) => {
+  await t.test('Runs full 4-stage pipeline and logs trajectory with step durations', async () => {
+    setExtractorMock({
+      async generateContent() {
+        return JSON.stringify({
+          skills: ['TypeScript', 'Node.js'],
+          years_experience: 4,
+          tools: ['Docker', 'PostgreSQL'],
+        });
+      },
+    });
+
+    setMatcherMock({
+      async generateContent() {
+        return JSON.stringify({
+          fit_score: 75,
+          mismatch_reasons: [
+            'Candidate has 4 years experience vs 5+ required',
+            'Candidate lacks Docker experience',
+          ],
+        });
+      },
+    });
+
+    setVerifierMock({
+      async generateContent() {
+        return JSON.stringify({
+          verified_score: 85,
+          verifications: [
+            {
+              claim: 'Candidate has 4 years experience vs 5+ required',
+              supported: true,
+              evidence: 'Resume states 4 years',
+              flag_type: 'phrasing_risk',
+            },
+            {
+              claim: 'Candidate lacks Docker experience',
+              supported: false,
+              evidence: 'Resume lists Docker under Tools',
+              flag_type: 'unsupported',
+            },
+          ],
+        });
+      },
+    });
+
+    setStrategistMock({
+      async generateContent() {
+        return JSON.stringify({
+          overall_recommendation: 'APPLY_WITH_CAVEAT',
+          overall_rationale: 'Fit score rose after Docker gap was debunked.',
+          actions: [
+            {
+              claim: 'Candidate has 4 years experience vs 5+ required',
+              action: 'REWRITE_SUGGESTED',
+              reasoning: 'Framing can be improved.',
+              suggested_rewrite: 'Highlight rapid execution across 4 intense years.',
+              requires_human_approval: true,
+            },
+          ],
+        });
+      },
+    });
+
+    const result = await runAgenticAnalysis({
+      resumeContent: 'Software Engineer with 4 years Node.js and Docker.',
+      jobDescription: 'Senior Engineer with 5+ years Node and Docker.',
+    });
+
+    assert.equal(result.baseline_score, 75);
+    assert.equal(result.verified_score, 85);
+    assert.equal(result.verifications.length, 2);
+    assert.equal(result.strategist_actions.length, 1);
+    assert.equal(result.trajectory.length, 4);
+
+    const steps = result.trajectory.map(t => t.step);
+    assert.deepEqual(steps, ['extractor', 'matcher', 'verifier', 'strategist']);
+
+    for (const step of result.trajectory) {
+      assert.ok(typeof step.duration_ms === 'number');
+      assert.ok(step.input);
+      assert.ok(step.output);
+    }
+  });
+});
+
+test('POST /applications/:id/analyze-v2 Route Integration Suite', async (t) => {
+  let userToken = '';
+  let resumeId = '';
+  let appId = '';
+
+  await t.test('Setup test user, resume, and application', async () => {
+    const regRes = await fetch(`${baseUrl}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: `analyze_v2_${Date.now()}@example.com`,
+        password: 'password123!',
+      }),
+    });
+    const regData = await regRes.json();
+    userToken = regData.token;
+
+    const resRes = await fetch(`${baseUrl}/resumes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        name: 'Backend Specialist',
+        content: 'Experienced Node.js, Express, PostgreSQL developer with Docker and 4 years experience.',
+      }),
+    });
+    resumeId = (await resRes.json()).resume.id;
+
+    const appRes = await fetch(`${baseUrl}/applications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        resume_id: resumeId,
+        company_name: 'Stripe',
+        role_title: 'Backend Platform Engineer',
+        job_description: `Senior Node Developer with 5+ years experience and AWS. (Test Run ${Date.now()})`,
+        platform: 'direct',
+        applied_at: '2026-08-15',
+      }),
+    });
+    appId = (await appRes.json()).application.id;
+  });
+
+  await t.test('POST /applications/:id/analyze-v2 returns side-by-side baseline and agentic_v2 comparison', async () => {
+    setBaselineMock({
+      async generateContent() {
+        return JSON.stringify({
+          fit_score: 70,
+          mismatch_reasons: ['Baseline missing AWS'],
+        });
+      },
+    });
+
+    setExtractorMock({
+      async generateContent() {
+        return JSON.stringify({
+          skills: ['Node.js', 'PostgreSQL', 'Docker'],
+          years_experience: 4,
+          tools: ['Express'],
+        });
+      },
+    });
+
+    setMatcherMock({
+      async generateContent() {
+        return JSON.stringify({
+          fit_score: 72,
+          mismatch_reasons: ['Missing AWS experience', '4 years vs 5+ years'],
+        });
+      },
+    });
+
+    setVerifierMock({
+      async generateContent() {
+        return JSON.stringify({
+          verified_score: 80,
+          verifications: [
+            {
+              claim: 'Missing AWS experience',
+              supported: true,
+              evidence: 'No AWS in resume',
+              flag_type: 'none',
+            },
+            {
+              claim: '4 years vs 5+ years',
+              supported: true,
+              evidence: 'Candidate has 4 years',
+              flag_type: 'phrasing_risk',
+            },
+          ],
+        });
+      },
+    });
+
+    setStrategistMock({
+      async generateContent() {
+        return JSON.stringify({
+          overall_recommendation: 'APPLY_WITH_CAVEAT',
+          overall_rationale: 'Strong backend fit with minor AWS gap.',
+          actions: [
+            {
+              claim: 'Missing AWS experience',
+              action: 'APPLY_WITH_CAVEAT',
+              reasoning: 'Candidate has Docker/Postgres background.',
+              caveat_note: 'Frame container skills as easily transferable.',
+              requires_human_approval: false,
+            },
+          ],
+        });
+      },
+    });
+
+    const res = await fetch(`${baseUrl}/applications/${appId}/analyze-v2`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.message, 'Analysis v2 generated successfully');
+    assert.equal(body.application_id, appId);
+
+    // Baseline assertions
+    assert.ok(body.baseline, 'Baseline object must be present');
+    assert.equal(typeof body.baseline.fit_score, 'number');
+    assert.ok(Array.isArray(body.baseline.mismatch_reasons));
+
+    // Agentic v2 assertions
+    assert.ok(body.agentic_v2, 'Agentic v2 object must be present');
+    assert.equal(body.agentic_v2.baseline_score, 72);
+    assert.equal(body.agentic_v2.verified_score, 80);
+    assert.equal(body.agentic_v2.verifications.length, 2);
+    assert.equal(body.agentic_v2.strategist_actions.length, 1);
+    assert.equal(body.agentic_v2.trajectory.length, 4);
+
+    // Trajectory step names check
+    const trajectorySteps = body.agentic_v2.trajectory.map(s => s.step);
+    assert.deepEqual(trajectorySteps, ['extractor', 'matcher', 'verifier', 'strategist']);
   });
 });
